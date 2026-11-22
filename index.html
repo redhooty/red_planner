@@ -69,12 +69,13 @@ body{font:16px system-ui;margin:0;background:#f3f4f6;color:#202124}header{backgr
 .figurant-summary{margin-top:20px;break-inside:avoid}.figurant-summary h3{margin:0 0 8px}.figurant-summary table{width:100%;border-collapse:collapse}.figurant-summary th,.figurant-summary td{text-align:left;padding:8px 10px;border-bottom:1px solid #e2e5e9}.figurant-summary th{font-weight:700}.figurant-summary .fig-over-six{color:#dc2626!important;font-weight:800}
 #planTable .fig-over-six{color:#dc2626!important;font-weight:800;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:3px}
 @media print{#planTable .fig-over-six{color:#dc2626!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}}
-</style></head><body><header><h1>Trainingsplaner 1-85</h1><div>Offline · Trainingsorganisation · gemeinsame Startzeiten</div></header><main>
+</style>
+</head><body><header><h1>Trainingsplaner BETA</h1><div>Offline · Trainingsorganisation · gemeinsame Startzeiten</div></header><main>
 <section class="card edit"><h2>1. Schadenplätze</h2><input id="placeName" placeholder="Schadenplatzname"><button id="addPlace">Schadenplatz hinzufügen</button><div id="places"></div></section>
 <section class="card edit"><h2>2. Personen und Hunde</h2><div class="person-entry"><div class="person-entry-title">Neue Person erfassen</div><div class="person-entry-grid"><label class="person-entry-wide">Name der Person<input id="personName" placeholder="Name eingeben"></label><label>Hund 1 (optional)<input id="dog1" placeholder="Name des ersten Hundes"></label><label>Hund 2 (optional)<input id="dog2" placeholder="Name des zweiten Hundes"></label><label class="person-entry-wide">Eigener Schadenplatz (optional)<select id="personPlace"></select></label></div><button id="addPerson" class="secondary">Person hinzufügen</button></div><div class="person-list-heading">Erfasste Personen und Hunde</div><div id="people"></div><button id="saveAllPeople">Alle Personen und Hunde speichern</button><p class="muted">Mit «Mit [Hundename] laufen» kannst du jeden Hund einzeln für diesen Trainingsplan aktivieren oder deaktivieren, ohne ihre Angaben zu löschen. Mit «Nicht einsetzen» wird die Person vollständig aus der Planung ausgeschlossen, ohne ihre Daten zu löschen. Alle Änderungen werden gemeinsam gespeichert.</p></section>
 <section class="card" id="placeOverviewSection"><h2>3. Schadenplatzübersicht</h2><p class="muted">Die Begutachterrolle wird direkt bei den Personen unter Punkt 2 festgelegt.</p><div id="placeOverview"></div></section>
 <section class="card edit"><h2>4. Trainingsparameter</h2><div class="time-option"><label class="role-option"><input id="noTime" type="checkbox"> Ohne Uhrzeit planen</label></div><div id="timeField" class="time-field"><label>Trainingsbeginn<input id="start" type="time"></label></div><p class="muted">Ohne Uhrzeit wird der Plan als Runde 1, Runde 2 usw. angezeigt.</p><div id="timeDetails" class="time-field"><label>Dauer pro Durchgang (Minuten)<input id="duration" type="number" min="1" value="20"></label><label>Wechselzeit (Minuten)<input id="travel" type="number" min="0" value="5"></label></div><p class="muted">Optimiert die gesamte Planung auf möglichst wenige Zeitrunden und Wartezeiten. Figuranten bleiben möglichst für mehrere Hunde am Stück (keine Einzeleinsätze, wenn vermeidbar); maximal 6 Durchgänge hintereinander, danach mindestens 1 Runde Pause. Hunde werden möglichst nach Niveau eingeteilt: Anfänger → Mittlere Anfänger → Mittlere Fortgeschritten → Fortgeschritten → Einsatzfähig. Hundeführer ohne festen Schadenplatz werden für den Plan passend einem Startplatz zugeteilt. Jeder Hund startet am eigenen beziehungsweise zugeteilten Schadenplatz und besucht die weiteren Plätze in fester Reihenfolge (1 → 2 → 3 → 1).</p><div class="block-editor"><label class="role-option"><input id="useBlocks" type="checkbox"> Trainingsblöcke strikt nacheinander planen</label><div id="blockSettings" hidden><p class="muted">Pro Block Ausbildungsstände wählen. Ein Ausbildungsstand darf nur in einem Block vorkommen. Alle aktiven Hundeteams müssen zugeordnet sein.</p><div id="blockList"></div><button type="button" class="secondary" id="addBlock">Trainingsblock hinzufügen</button></div></div><button id="generate">Trainingsplan erstellen</button> <button class="secondary" id="backup">Datensicherung exportieren</button><label>Datensicherung importieren<input type="file" id="restore" accept="application/json,.json"></label></section>
-<section class="card"><h2>5. Trainingsplan</h2><div id="status" class="muted">Noch kein Plan erstellt.</div><div class="scroll"><table id="planTable"><thead id="scheduleHead"></thead><tbody id="schedule"></tbody></table></div><p class="muted">Eine Startzeit oder Runde pro Zeile, Schadenplätze in Spalten.</p><div id="figurantSummary" class="figurant-summary" aria-live="polite"></div><button class="edit secondary" id="print">PDF speichern / Drucken</button> <button class="edit secondary" id="printLayout" type="button">Drucken / Drucklayout</button></section>
+<section class="card"><h2>5. Trainingsplan</h2><div id="status" class="muted">Noch kein Plan erstellt.</div><div class="scroll"><table id="planTable"><thead id="scheduleHead"></thead><tbody id="schedule"></tbody></table></div><p class="muted">Eine Startzeit oder Runde pro Zeile, Schadenplätze in Spalten.</p><div id="figurantSummary" class="figurant-summary" aria-live="polite"></div><button class="edit secondary" id="fillablePdf" type="button">Drucken Begutachter</button> <button class="edit secondary" id="print">Drucken Hundeführer</button></section>
 </main><script>
 'use strict';
 const KEY='redog_v4', $=id=>document.getElementById(id);
@@ -931,6 +932,7 @@ function validateCompletePlan(plan,teams){
  if(handlerFigurantConflict(plan))return 'Figurant während eigener Suchserie eingesetzt';
  return '';
 }
+function observationKey(r){return [r.person,r.dogIndex,r.place].join('|')}
 function renderPlan(){
  const head=$('scheduleHead'),body=$('schedule'),summary=$('figurantSummary');head.replaceChildren();body.replaceChildren();summary.replaceChildren();
  const hr=el('tr');hr.append(el('th',db.settings.start?'Startzeit':'Runde'));
@@ -1269,7 +1271,70 @@ function downloadPlanPdf(){
  const blob=new Blob([pdf],{type:'application/pdf'}),url=URL.createObjectURL(blob),a=document.createElement('a');
  a.href=url;a.download='Trainingsplan.pdf';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);
 }
-$('print').onclick=()=>window.print();$('printLayout').onclick=()=>window.print();$('backup').onclick=()=>{const blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=el('a');a.href=url;a.download='trainingsplaner-sicherung.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),2000)};
+
+// BETA: standalone offline AcroForm export. One landscape page per training round.
+function downloadFillablePdf(){
+ if(!db.plan.length){alert('Bitte zuerst einen Trainingsplan erstellen.');return}
+ const enc=new TextEncoder(),objs=[];
+ const add=x=>(objs.push(x),objs.length);
+ const esc=x=>String(x).replace(/\\/g,'\\\\').replace(/\(/g,'\\(').replace(/\)/g,'\\)');
+ const ascii=x=>String(x).replace(/ä/g,'ae').replace(/ö/g,'oe').replace(/ü/g,'ue').replace(/Ä/g,'Ae').replace(/Ö/g,'Oe').replace(/Ü/g,'Ue').replace(/ß/g,'ss').replace(/[^\x20-\x7e]/g,'?');
+ const utf16=x=>{let h='FEFF';for(let i=0;i<x.length;i++)h+=x.charCodeAt(i).toString(16).padStart(4,'0').toUpperCase();return '<'+h+'>'};
+ const catalog=add(''),pagesId=add(''),font=add('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>');
+ const pageIds=[],fieldIds=[];
+ const times=[...new Set(db.plan.map(r=>r.start))].sort((a,b)=>a-b);
+ const segments=db.settings.useBlocks&&Array.isArray(db.planBlocks)?db.planBlocks:[];
+ const line=(x,y,t,size=11,color='0.12 0.15 0.2')=>'BT /F1 '+size+' Tf '+color+' rg '+x+' '+y+' Td ('+esc(ascii(t))+') Tj ET\n';
+ const clip=(s,n=43)=>String(s).length>n?String(s).slice(0,n-3)+'...':String(s);
+ for(let k=0;k<times.length;k++){
+  const time=times[k],segment=segments.find(b=>time>=b.start&&time<=b.last);
+  let stream='0.98 0.98 0.99 rg 0 0 842 595 re f\n';
+  stream+=line(30,558,'TRAININGSPLAN - BETA / AUSFUELLBARE BEOBACHTUNGEN',17,'0.5 0.08 0.13');
+  stream+=line(30,531,(segment?'Trainingsblock '+segment.number+' - '+segment.name+' | ':'')+(db.settings.start?clock(time):'Runde '+(Math.round(time/(db.settings.duration+db.settings.travel))+1)),12);
+  const widgets=[];
+  for(let j=0;j<db.places.length;j++){
+   const place=db.places[j],r=db.plan.find(a=>a.start===time&&a.place===place.id);
+   const w=(842-60)/db.places.length,x=30+j*w,y=38;
+   stream+='0.80 0.82 0.86 RG '+x+' '+y+' '+(w-8)+' 470 re S\n';
+   stream+='0.95 0.90 0.91 rg '+(x+1)+' 471 '+(w-10)+' 35 re f\n';
+   stream+=line(x+9,483,clip(place.name,30),13,'0.5 0.08 0.13');
+   if(!r){stream+=line(x+10,450,'Kein Suchdurchgang',10);continue}
+   stream+=line(x+9,452,clip(name(r.person)+' / '+r.dog,31),12);
+   stream+=line(x+9,426,'Begutachter: '+clip(name(r.judge),26),10);
+   stream+=line(x+9,409,'Figuranten: '+clip(r.fig.map(name).join(', '),30),9);
+   const info=dogInfo(r.person,r.dogIndex);
+   if(info){
+    stream+=line(x+9,388,'Marker: '+clip(info.marker||'-',30),9);
+    stream+=line(x+9,373,'Gegenstand: '+clip(info.object||'-',27),9);
+    stream+=line(x+9,358,'Fuettern: '+(info.feeding?'Ja':'Nein'),9);
+   }
+   stream+=line(x+9,330,'Beobachtungen (in Adobe ausfuellbar):',10);
+   const rect=[x+9,50,x+w-19,316],key=observationKey(r),value='';
+   const field=add('<< /FT /Tx /T '+utf16('Beobachtung_'+key)+' /Ff 4096 /V '+utf16(value)+' /DA (/Helv 10 Tf 0 g) /Kids [] >>');
+   const widget=add('<< /Type /Annot /Subtype /Widget /Parent '+field+' 0 R /Rect ['+rect.join(' ')+'] /F 4 /P PAGE_REF /BS << /W 1 /S /S >> /MK << /BC [0.65 0.67 0.72] /BG [1 1 1] >> >>');
+   objs[field-1]=objs[field-1].replace('/Kids []','/Kids ['+widget+' 0 R]');
+   widgets.push(widget);fieldIds.push(field);
+  }
+  const bytes=enc.encode(stream),content=add('<< /Length '+bytes.length+' >>\nstream\n'+stream+'endstream');
+  const page=add('<< /Type /Page /Parent '+pagesId+' 0 R /MediaBox [0 0 842 595] /Resources << /Font << /F1 '+font+' 0 R >> >> /Contents '+content+' 0 R /Annots ['+widgets.map(n=>n+' 0 R').join(' ')+'] >>');
+  for(const widget of widgets)objs[widget-1]=objs[widget-1].replace('PAGE_REF',page+' 0 R');
+  pageIds.push(page);
+ }
+ const form=add('<< /Fields ['+fieldIds.map(id=>id+' 0 R').join(' ')+'] /NeedAppearances true /DR << /Font << /Helv '+font+' 0 R >> >> /DA (/Helv 10 Tf 0 g) >>');
+ objs[catalog-1]='<< /Type /Catalog /Pages '+pagesId+' 0 R /AcroForm '+form+' 0 R >>';
+ objs[pagesId-1]='<< /Type /Pages /Kids ['+pageIds.map(id=>id+' 0 R').join(' ')+'] /Count '+pageIds.length+' >>';
+ const parts=['%PDF-1.4\n'],offsets=[0];let pos=enc.encode(parts[0]).length;
+ for(let i=0;i<objs.length;i++){offsets.push(pos);const chunk=(i+1)+' 0 obj\n'+objs[i]+'\nendobj\n';parts.push(chunk);pos+=enc.encode(chunk).length}
+ const xref=pos;
+ parts.push('xref\n0 '+(objs.length+1)+'\n0000000000 65535 f \n');
+ for(const n of offsets.slice(1))parts.push(String(n).padStart(10,'0')+' 00000 n \n');
+ parts.push('trailer\n<< /Size '+(objs.length+1)+' /Root '+catalog+' 0 R >>\nstartxref\n'+xref+'\n%%EOF');
+ const blob=new Blob(parts,{type:'application/pdf'}),url=URL.createObjectURL(blob),a=document.createElement('a');
+ a.href=url;a.download='Trainingsplan_BETA_ausfuellbar.pdf';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);
+}
+$('fillablePdf').onclick=downloadFillablePdf;
+
+$('print').onclick=()=>window.print();$('backup').onclick=()=>{const blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=el('a');a.href=url;a.download='trainingsplaner-sicherung.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),2000)};
 $('restore').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const x=JSON.parse(await f.text());if(!Array.isArray(x.places)||!Array.isArray(x.people)||!Array.isArray(x.plan)||!x.settings)throw Error('Ungültige Sicherung');if(!confirm('Aktuelle Daten durch Sicherung ersetzen?'))return;db=migrateLevels(x);save();render();applySettings();renderBlocks()}catch(err){alert(err.message)}};
 function syncTimeOption(){const disabled=$('noTime').checked;$('timeField').hidden=disabled;$('timeDetails').hidden=disabled;$('start').disabled=disabled}
 $('noTime').onchange=syncTimeOption;
