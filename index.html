@@ -1,0 +1,1283 @@
+<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Trainingsplaner 1-90</title><meta name="theme-color" content="#a51e29"><meta name="description" content="Offline-fähiger Trainingsplaner"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="manifest" href="./manifest.webmanifest"><link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png"><link rel="apple-touch-icon" href="./icon-192.png"><style>
+body{font:16px system-ui;margin:0;background:#f3f4f6;color:#202124}header{background:#a51e29;color:white;padding:18px}h1{font-size:23px;margin:0}main{max-width:900px;margin:auto;padding:12px}.card{background:white;border-radius:12px;padding:15px;margin:12px 0;box-shadow:0 1px 4px #ddd}input,select,button{font:inherit;padding:10px;margin:5px 0;box-sizing:border-box;max-width:100%}input,select{width:100%;border:1px solid #aaa;border-radius:6px}button{background:#a51e29;color:white;border:0;border-radius:7px;cursor:pointer}button.secondary{background:#4b5563}button.small{padding:5px 9px;font-size:13px;margin-left:8px}label{display:block;margin-top:8px}table{width:100%;border-collapse:collapse;font-size:13px;min-width:560px}#planTable td{vertical-align:top;min-width:170px}#planTable th:first-child{position:sticky;left:0;background:white;min-width:80px}#planTable td div{margin-top:4px}td,th{border-bottom:1px solid #ddd;padding:7px;text-align:left}.scroll{overflow-x:auto}.item{border-bottom:1px solid #ddd;padding:9px 0}.person-card{border:2px solid #e2e5ea;border-left:5px solid #a51e29;border-radius:12px;padding:15px;margin:16px 0 20px;background:#fff;box-shadow:0 3px 10px #0000000b}.person-heading{display:flex;align-items:center;gap:10px;padding-bottom:12px;margin-bottom:10px;border-bottom:2px solid #edf0f3}.person-number{background:#a51e29;color:white;border-radius:8px;min-width:32px;height:32px;display:grid;place-items:center;font-weight:700}.person-heading strong{font-size:17px}.person-card .role-options{margin-top:12px}.muted{color:#666;font-size:13px}.warning{color:#9b1c1c;white-space:pre-wrap}.ok{color:#166534}.checks label{display:flex;align-items:center;gap:8px}.checks input{width:auto}.role-options{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:12px 0}.role-option{display:flex;align-items:center;gap:10px;margin:0;padding:12px;border:1px solid #d1d5db;border-radius:9px;background:#f9fafb;cursor:pointer;font-size:14px;font-weight:600}.role-option input{width:20px;height:20px;margin:0;flex:none;accent-color:#a51e29}.role-option:has(input:checked){border-color:#a51e29;background:#fff3f4}.time-option{max-width:390px;margin:10px 0}.time-field[hidden]{display:none!important}@media(max-width:420px){.role-options{gap:7px}.role-option{padding:9px 7px;font-size:13px;gap:6px}}@media print{header,.edit,.small,#placeOverviewSection,#status{display:none!important}.card{box-shadow:none}body{background:white}}
+
+/* Schadenplätze als deutlich getrennte Karten */
+.place-card{border:2px solid #e2e5ea;border-left:5px solid #a51e29;border-radius:12px;padding:15px;margin:16px 0 20px;background:#fff;box-shadow:0 3px 10px #0000000b}
+.place-heading{display:flex;align-items:center;gap:10px;padding-bottom:12px;margin-bottom:10px;border-bottom:2px solid #edf0f3}
+.place-heading strong{font-size:17px;overflow-wrap:anywhere}
+.place-number{background:#a51e29;color:white;border-radius:8px;min-width:32px;height:32px;display:grid;place-items:center;font-weight:700}
+/* Schadenplatz-Bedienung */
+.place-controls{display:flex;align-items:end;gap:10px;margin-top:10px;flex-wrap:wrap}
+.place-controls>label{flex:1 1 180px;min-width:120px;margin:0;font-weight:500;font-size:14px}
+.place-controls select{margin:5px 0 0;min-height:46px}
+.place-actions{display:flex;gap:8px;align-items:center;flex:0 0 auto;padding-bottom:0}
+.place-actions button{margin:0;padding:12px 13px;min-height:46px;font-size:14px;font-weight:600;border:1px solid #d1d5db;border-radius:9px;background:#f9fafb;color:#202124}
+.place-actions button:first-child{border-color:#a51e29;background:#fff3f4;color:#9d1724}
+.place-actions button:active{background:#e8eaee}
+/* Lesbare Trainingsplantabelle */
+#planTable{border-collapse:separate;border-spacing:0;font-size:14px;line-height:1.5;min-width:690px}
+#planTable th,#planTable td{padding:13px 12px;border-bottom:1px solid #dce1e7;border-right:1px solid #e9edf1}
+#planTable thead th{background:#a51e29;color:#fff;font-weight:700;white-space:normal;position:sticky;top:0;z-index:2}
+#planTable thead th:first-child{background:#a51e29;color:#fff;z-index:4}
+#planTable tbody tr:nth-child(even) td{background:#f7f8fa}
+#planTable tbody tr:nth-child(even)>th{background:#eef0f3}
+#planTable tbody th:first-child{background:#fff;min-width:90px;font-weight:700;color:#991b27;z-index:1}
+#planTable td{min-width:190px;overflow-wrap:anywhere}
+#planTable td strong{display:block;font-size:15px;color:#192331;margin-bottom:8px;padding-bottom:7px;border-bottom:1px solid #e5e7eb}
+#planTable td div{margin-top:5px}
+#planTable td.muted{text-align:center;color:#9ca3af;font-size:20px}
+@media(max-width:550px){.place-controls{gap:7px}.place-actions{gap:6px}.place-actions button{padding:11px 9px;font-size:12px}#planTable{font-size:13px}#planTable td{min-width:180px}}
+/* Klare Beschriftungen in der Trainingsplantabelle */
+#planTable .plan-details{display:grid;gap:4px;margin-top:8px}
+#planTable .plan-detail{display:grid;grid-template-columns:minmax(90px,auto) minmax(0,1fr);column-gap:9px;align-items:start;margin:0;padding:3px 0;line-height:1.45}
+#planTable .plan-detail+.plan-detail{border-top:1px solid #edf0f3}
+#planTable .plan-label{font-weight:650;color:#525d6b}
+#planTable .plan-value{font-weight:500;color:#182230;overflow-wrap:anywhere}
+#planTable .plan-detail--feeding .plan-value{font-weight:800;font-size:19px;line-height:1.15}
+#planTable .plan-detail--feeding .plan-value.is-yes{color:#16a34a}
+#planTable .plan-detail--feeding .plan-value.is-no{color:#dc2626}
+@media print{#planTable .plan-detail--feeding .plan-value.is-yes{color:#16a34a!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}#planTable .plan-detail--feeding .plan-value.is-no{color:#dc2626!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+@media print{#planTable .plan-details{gap:1px}#planTable .plan-detail{grid-template-columns:minmax(80px,auto) minmax(0,1fr);padding:2px 0;column-gap:5px;break-inside:avoid}#planTable .plan-detail+.plan-detail{border-top:0}}
+@media print{#planTable thead th{position:static!important;background:#f0f1f3!important;color:#111!important}#planTable tbody th:first-child{position:static!important}#planTable td,#planTable th{padding:8px 7px;font-size:11px}#planTable td strong{font-size:12px}}
+
+/* Schadenplatzübersicht im gleichen Kartenstil wie Personen und Schadenplätze */
+.overview-card{margin:14px 0 18px}
+.overview-person{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 2px;border-bottom:1px solid #edf0f3}
+.overview-person:last-child{border-bottom:0;padding-bottom:2px}
+.overview-person-info{display:flex;flex-direction:column;gap:3px;min-width:0}
+.overview-person-info strong{font-size:15px;overflow-wrap:anywhere}
+.overview-dogs{color:#626b77;font-size:13px;overflow-wrap:anywhere}
+.overview-role{flex:0 0 auto;border:1px solid #d1d5db;background:#f9fafb;border-radius:9px;padding:8px 10px;font-size:13px;font-weight:600;color:#374151}
+.overview-inactive{color:#9d1724;background:#fff3f4;border-color:#e7b7bd}
+@media(max-width:420px){.overview-person{gap:8px}.overview-role{padding:7px 8px;font-size:12px}}
+/* Deutlich erkennbare Personeneingabe */
+.person-entry{border:2px solid #e2e5ea;border-left:5px solid #a51e29;border-radius:12px;padding:16px;margin:14px 0 22px;background:#fafbfc;box-shadow:0 3px 10px #0000000b}
+.person-entry-title{font-size:17px;font-weight:750;color:#8f1d29;margin:0 0 12px;padding-bottom:10px;border-bottom:2px solid #e6e9ee}
+.person-entry-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.person-entry label{display:block;margin:0;font-size:14px;font-weight:650;color:#374151}
+.person-entry input,.person-entry select{display:block;margin:6px 0 0;min-height:46px;background:white;border:1.5px solid #b9c0ca;font-size:16px}
+.person-entry input:focus,.person-entry select:focus{outline:2px solid #a51e29;outline-offset:1px;border-color:#a51e29}
+.person-entry .person-entry-wide{grid-column:1/-1}
+.person-entry #addPerson{display:block;margin:16px 0 0;padding:12px 18px;font-weight:700;min-height:46px}
+.person-list-heading{font-size:16px;font-weight:750;color:#374151;margin:24px 0 6px;padding-bottom:9px;border-bottom:2px solid #e6e9ee}
+@media(max-width:520px){.person-entry-grid{grid-template-columns:1fr}.person-entry{padding:13px}.person-entry .person-entry-wide{grid-column:auto}}
+/* Sichtbare Trainingsblock-Trennung, auch im PDF-Druck */
+#planTable .block-heading th{background:#fbe8ea!important;color:#851723!important;border-top:3px solid #a51e29;font-size:15px;padding:14px 12px;text-align:left;position:static!important}
+#planTable .block-break th,#planTable .block-break td{background:#fff5e5!important;color:#80500b!important;font-weight:700;border-top:2px dashed #d49a40;border-bottom:2px dashed #d49a40}
+#planTable .block-break td{text-align:center;font-size:14px}
+@media print{#planTable .block-heading th{background:#fbe8ea!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}#planTable .block-break th,#planTable .block-break td{background:#fff5e5!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+.figurant-summary{margin-top:20px;break-inside:avoid}.figurant-summary h3{margin:0 0 8px}.figurant-summary table{width:100%;border-collapse:collapse}.figurant-summary th,.figurant-summary td{text-align:left;padding:8px 10px;border-bottom:1px solid #e2e5e9}.figurant-summary th{font-weight:700}.figurant-summary .fig-over-six{color:#dc2626!important;font-weight:800}
+#planTable .fig-over-six{color:#dc2626!important;font-weight:800;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:3px}
+@media print{#planTable .fig-over-six{color:#dc2626!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+</style></head><body><header><h1>Trainingsplaner 1-85</h1><div>Offline · Trainingsorganisation · gemeinsame Startzeiten</div></header><main>
+<section class="card edit"><h2>1. Schadenplätze</h2><input id="placeName" placeholder="Schadenplatzname"><button id="addPlace">Schadenplatz hinzufügen</button><div id="places"></div></section>
+<section class="card edit"><h2>2. Personen und Hunde</h2><div class="person-entry"><div class="person-entry-title">Neue Person erfassen</div><div class="person-entry-grid"><label class="person-entry-wide">Name der Person<input id="personName" placeholder="Name eingeben"></label><label>Hund 1 (optional)<input id="dog1" placeholder="Name des ersten Hundes"></label><label>Hund 2 (optional)<input id="dog2" placeholder="Name des zweiten Hundes"></label><label class="person-entry-wide">Eigener Schadenplatz (optional)<select id="personPlace"></select></label></div><button id="addPerson" class="secondary">Person hinzufügen</button></div><div class="person-list-heading">Erfasste Personen und Hunde</div><div id="people"></div><button id="saveAllPeople">Alle Personen und Hunde speichern</button><p class="muted">Mit «Mit [Hundename] laufen» kannst du jeden Hund einzeln für diesen Trainingsplan aktivieren oder deaktivieren, ohne ihre Angaben zu löschen. Mit «Nicht einsetzen» wird die Person vollständig aus der Planung ausgeschlossen, ohne ihre Daten zu löschen. Alle Änderungen werden gemeinsam gespeichert.</p></section>
+<section class="card" id="placeOverviewSection"><h2>3. Schadenplatzübersicht</h2><p class="muted">Die Begutachterrolle wird direkt bei den Personen unter Punkt 2 festgelegt.</p><div id="placeOverview"></div></section>
+<section class="card edit"><h2>4. Trainingsparameter</h2><div class="time-option"><label class="role-option"><input id="noTime" type="checkbox"> Ohne Uhrzeit planen</label></div><div id="timeField" class="time-field"><label>Trainingsbeginn<input id="start" type="time"></label></div><p class="muted">Ohne Uhrzeit wird der Plan als Runde 1, Runde 2 usw. angezeigt.</p><div id="timeDetails" class="time-field"><label>Dauer pro Durchgang (Minuten)<input id="duration" type="number" min="1" value="20"></label><label>Wechselzeit (Minuten)<input id="travel" type="number" min="0" value="5"></label></div><p class="muted">Optimiert die gesamte Planung auf möglichst wenige Zeitrunden und Wartezeiten. Figuranten bleiben möglichst für mehrere Hunde am Stück (keine Einzeleinsätze, wenn vermeidbar); maximal 6 Durchgänge hintereinander, danach mindestens 1 Runde Pause. Hunde werden möglichst nach Niveau eingeteilt: Anfänger → Mittlere Anfänger → Mittlere Fortgeschritten → Fortgeschritten → Einsatzfähig. Hundeführer ohne festen Schadenplatz werden für den Plan passend einem Startplatz zugeteilt. Jeder Hund startet am eigenen beziehungsweise zugeteilten Schadenplatz und besucht die weiteren Plätze in fester Reihenfolge (1 → 2 → 3 → 1).</p><div class="block-editor"><label class="role-option"><input id="useBlocks" type="checkbox"> Trainingsblöcke strikt nacheinander planen</label><div id="blockSettings" hidden><p class="muted">Pro Block Ausbildungsstände wählen. Ein Ausbildungsstand darf nur in einem Block vorkommen. Alle aktiven Hundeteams müssen zugeordnet sein.</p><div id="blockList"></div><button type="button" class="secondary" id="addBlock">Trainingsblock hinzufügen</button></div></div><button id="generate">Trainingsplan erstellen</button> <button class="secondary" id="backup">Datensicherung exportieren</button><label>Datensicherung importieren<input type="file" id="restore" accept="application/json,.json"></label></section>
+<section class="card"><h2>5. Trainingsplan</h2><div id="status" class="muted">Noch kein Plan erstellt.</div><div class="scroll"><table id="planTable"><thead id="scheduleHead"></thead><tbody id="schedule"></tbody></table></div><p class="muted">Eine Startzeit oder Runde pro Zeile, Schadenplätze in Spalten.</p><div id="figurantSummary" class="figurant-summary" aria-live="polite"></div><button class="edit secondary" id="print">PDF speichern / Drucken</button> <button class="edit secondary" id="printLayout" type="button">Drucken / Drucklayout</button></section>
+</main><script>
+'use strict';
+const KEY='redog_v4', $=id=>document.getElementById(id);
+const LEVELS=['Anfänger','Mittlere Anfänger','Mittlere Fortgeschritten','Fortgeschritten','Einsatzfähig'];
+const normalizeLevel=level=>level==='Mittlere'?'Mittlere Anfänger':level;
+const dogEnabled=(person,index)=>person.withDog!==false && (!person.dogRun || person.dogRun[index]!==false);
+const activeDogs=person=>(person.dogs||[]).filter((dog,index)=>dog&&dogEnabled(person,index));
+const levelOf=(person,index)=>Math.max(0,LEVELS.indexOf(normalizeLevel(dogDetails(person,index).level)||'Anfänger'));
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,8);
+const empty=()=>({places:[],people:[],settings:{start:'',duration:20,travel:5,figCount:1},plan:[]});
+function load(){try{const x=localStorage.getItem(KEY);if(x)return JSON.parse(x);const v=JSON.parse(localStorage.getItem('redog_v3')||'null');if(v)return {places:(v.plaetze||[]).map(p=>({id:p.id,name:p.name})),people:(v.personen||[]).map(p=>({id:p.id,name:p.name,place:p.platz,dogs:p.hunde||[],judge:(v.plaetze||[]).some(q=>q.id===p.platz&&q.begutachter===p.id)})),settings:{start:'',duration:20,travel:5,figCount:v.figuranten||1},plan:[]}}catch(e){alert('Gespeicherte Daten konnten nicht geladen werden.')}return empty()}
+function migrateLevels(data){for(const p of data.people||[])for(const detail of Object.values(p.dogDetails||{}))if(detail&&detail.level==='Mittlere')detail.level='Mittlere Anfänger';for(const block of data.settings?.blocks||[])if(Array.isArray(block.levels)&&block.levels.includes('Mittlere'))block.levels=[...new Set(block.levels.flatMap(l=>l==='Mittlere'?['Mittlere Anfänger','Mittlere Fortgeschritten']:[l]))];return data}
+let db=migrateLevels(load());db.places.forEach(p=>{if(![1,2,3,4,5].includes(Number(p.figCount)))p.figCount=Number(db.settings?.figCount)||1});function save(){localStorage.setItem(KEY,JSON.stringify(db))}
+function el(tag,txt){const e=document.createElement(tag);if(txt!==undefined)e.textContent=txt;return e}
+function opt(select,items){const old=select.value;select.replaceChildren();items.forEach(p=>{const o=el('option',p.name);o.value=p.id;select.append(o)});if(items.some(p=>p.id===old))select.value=old}
+function button(label,fn){const b=el('button',label);b.className='small secondary';b.onclick=fn;return b}
+function dogDetails(person,index){
+ if(!person.dogDetails)person.dogDetails={};
+ if(!person.dogDetails[index])person.dogDetails[index]={marker:'',object:'',feeding:false,level:'Anfänger'};
+ return person.dogDetails[index];
+}
+function dogFields(person,index){
+ const detail=dogDetails(person,index),wrap=el('div');
+ wrap.style.cssText='padding:10px;margin:8px 0;background:#f3f4f6;border-radius:8px';
+ wrap.append(el('strong','Hund: '+person.dogs[index]));
+ const levelLabel=el('label','Niveau'),level=el('select');LEVELS.forEach(v=>{const o=el('option',v);o.value=v;level.append(o)});level.value=LEVELS.includes(detail.level)?detail.level:'Anfänger';levelLabel.append(level);wrap.append(levelLabel);
+ const marker=el('input');marker.placeholder='Marker/Anweisung';marker.value=detail.marker;
+ const object=el('input');object.placeholder='Bestätigungsgegenstand';object.value=detail.object;
+ const label=el('label'),feeding=el('input');
+ feeding.type='checkbox';feeding.checked=detail.feeding===true||detail.feeding==='true';
+ label.className='role-option';
+ label.style.cssText='margin:10px 0;max-width:390px';
+ label.append(feeding,el('span','Füttern'));
+ wrap.append(marker,object,label);
+ wrap.readChanges=()=>{detail.level=level.value;detail.marker=marker.value.trim();detail.object=object.value.trim();detail.feeding=feeding.checked};
+ return wrap;
+}
+function dogInfo(personId,dogIndex){
+ const person=db.people.find(p=>p.id===personId);
+ if(!person)return null;
+ return dogDetails(person,dogIndex);
+}
+function render(){
+ const places=$('places'),people=$('people');places.replaceChildren();people.replaceChildren();
+ db.places.forEach((p,placeIndex)=>{
+  const d=el('div');d.className='place-card';
+  const heading=el('div');heading.className='place-heading';
+  const number=el('span',String(placeIndex+1));number.className='place-number';
+  heading.append(number,el('strong',p.name));d.append(heading);
+  const figLabel=el('label','Figuranten pro Durchgang'),figSelect=el('select');
+  for(const n of [1,2,3,4,5]){const option=el('option',String(n));option.value=n;figSelect.append(option)}
+  figSelect.value=String(p.figCount||1);
+  figSelect.onchange=()=>{p.figCount=Number(figSelect.value);db.plan=[];save();renderPlan()};
+  figLabel.append(figSelect);const placeControls=el('div');placeControls.className='place-controls';const placeActions=el('div');placeActions.className='place-actions';placeControls.append(figLabel,placeActions);d.append(placeControls);
+  placeActions.append(button('Umbenennen',()=>{
+   const newName=prompt('Neuer Name des Schadenplatzes',p.name);
+   if(newName===null)return;
+   const name=newName.trim();
+   if(!name)return alert('Bitte Namen eingeben');
+   if(db.places.some(x=>x.id!==p.id&&x.name.toLowerCase()===name.toLowerCase()))return alert('Name bereits vorhanden');
+   p.name=name;db.plan=[];save();render();
+  }));
+  placeActions.append(button('Löschen',()=>{
+   if(db.people.some(x=>x.place===p.id))return alert('Zuerst Personen einem anderen Schadenplatz zuweisen.');
+   db.places=db.places.filter(x=>x.id!==p.id);db.plan=[];save();render();
+  }));places.append(d);
+ });
+ db.people.forEach((p,personIndex)=>{
+  const d=el('div');d.className='person-card';
+  const heading=el('div');heading.className='person-heading';
+  const number=el('span',String(personIndex+1));number.className='person-number';
+  heading.append(number,el('strong',p.name+' · '+((p.dogs||[]).join(', ')||'ohne Hund')));
+  d.append(heading);d.dataset.personId=p.id;
+  const roles=el('div');roles.className='role-options';
+  const dogChecks=(p.dogs||[]).map((dog,i)=>{const label=el('label'),check=el('input');check.type='checkbox';check.checked=dogEnabled(p,i);label.className='role-option';label.append(check,el('span','Mit '+dog+' laufen'));return {label,check}});
+  const judgeLabel=el('label'),judgeCheck=el('input');judgeCheck.type='checkbox';judgeCheck.checked=!!p.judge;
+  judgeLabel.className='role-option';judgeLabel.append(judgeCheck,el('span','Begutachter'));
+  const inactiveLabel=el('label'),inactiveCheck=el('input');inactiveCheck.type='checkbox';inactiveCheck.checked=p.inactive===true;
+  inactiveLabel.className='role-option';inactiveLabel.append(inactiveCheck,el('span','Nicht einsetzen'));
+  const syncRoles=()=>{dogChecks.forEach(({label,check})=>{check.disabled=inactiveCheck.checked;label.style.opacity=inactiveCheck.checked?'.45':'1'});judgeCheck.disabled=inactiveCheck.checked;judgeLabel.style.opacity=inactiveCheck.checked?'.45':'1'};
+  inactiveCheck.onchange=syncRoles;syncRoles();
+  dogChecks.forEach(({label})=>roles.append(label));roles.append(judgeLabel,inactiveLabel);d.append(roles);
+  const label=el('label','Schadenplatz ändern');
+  const select=el('select');
+  opt(select,[{id:'',name:'Kein fester Schadenplatz (automatisch)'},...db.places]);select.value=p.place||'';
+  label.append(select);d.append(label);
+  select.onchange=()=>{if(select.value!==p.place&&p.place)judgeCheck.checked=false;};
+  d.readChanges=()=>{p.place=select.value;p.judge=judgeCheck.checked;p.withDog=true;p.dogRun=dogChecks.map(({check})=>check.checked);p.inactive=inactiveCheck.checked;for(const field of d.querySelectorAll('[data-dog-field]'))field.readChanges()};
+
+  (p.dogs||[]).forEach((dog,i)=>{const field=dogFields(p,i);field.dataset.dogField='1';d.append(field)});
+  d.append(button('Löschen',()=>{
+   if(!confirm('Person wirklich löschen?'))return;
+   readPersonChanges();db.people=db.people.filter(x=>x.id!==p.id);db.plan=[];render();
+  }));people.append(d);
+ });
+ opt($('personPlace'),[{id:'',name:'Kein fester Schadenplatz (automatisch)'},...db.places]);
+ renderOverview();renderPlan();
+}
+function renderOverview(){
+ const target=$('placeOverview');target.replaceChildren();
+ const makeSection=(name,number,members)=>{
+  const section=el('div');section.className='place-card overview-card';
+  const heading=el('div');heading.className='place-heading';
+  const badge=el('span',number);badge.className='place-number';
+  heading.append(badge,el('strong',name));section.append(heading);
+  if(!members.length){const empty=el('p','Noch keine Personen zugewiesen.');empty.className='muted';section.append(empty)}
+  members.forEach(person=>{
+   const dogs=activeDogs(person);
+   const roles=person.inactive?['Nicht eingesetzt']:[...(person.judge?['Begutachter']:[]),...(dogs.length?['Hundeführer']:['Figurant'])];
+   const role=roles.join(' · ');
+   const line=el('div');line.className='overview-person';
+   const info=el('div');info.className='overview-person-info';
+   info.append(el('strong',person.name));
+   if(dogs.length){const sub=el('span',dogs.join(', '));sub.className='overview-dogs';info.append(sub)}
+   const tag=el('span',role);tag.className='overview-role';
+   if(person.inactive)tag.classList.add('overview-inactive');
+   line.append(info,tag);section.append(line);
+  });target.append(section);
+ };
+ db.places.forEach((place,i)=>makeSection(place.name,String(i+1),db.people.filter(person=>person.place===place.id)));
+ const free=db.people.filter(person=>!person.place);
+ if(free.length)makeSection('Ohne festen Schadenplatz','–',free);
+}
+$('addPlace').onclick=()=>{const name=$('placeName').value.trim();if(!name)return alert('Namen eingeben');if(db.places.some(p=>p.name.toLowerCase()===name.toLowerCase()))return alert('Name bereits vorhanden');db.places.push({id:uid(),name,figCount:1});$('placeName').value='';db.plan=[];save();render()};
+function readPersonChanges(){document.querySelectorAll('#people [data-person-id]').forEach(node=>node.readChanges?.())}
+$('saveAllPeople').onclick=()=>{readPersonChanges();db.plan=[];save();render();alert('Alle Personen- und Hundeangaben gespeichert. Trainingsplan bei Bedarf neu erstellen.')};
+$('addPerson').onclick=()=>{readPersonChanges();const name=$('personName').value.trim(),place=$('personPlace').value,dogs=[$('dog1').value.trim(),$('dog2').value.trim()].filter(Boolean);if(!name)return alert('Name eingeben');db.people.push({id:uid(),name,place,dogs,judge:false,withDog:dogs.length>0});['personName','dog1','dog2'].forEach(x=>$(x).value='');db.plan=[];render()};
+function minutes(s){const [h,m]=s.split(':').map(Number);return h*60+m}function clock(n){return `${String(Math.floor(n/60)%24).padStart(2,'0')}:${String(n%60).padStart(2,'0')}`}
+function settings(){const start=$('noTime').checked?'':$('start').value,duration=Number($('duration').value),travel=Number($('travel').value);if(!Number.isInteger(duration)||duration<1||!Number.isInteger(travel)||travel<0)throw Error('Ungültige Zeitangabe');return {start,duration,travel,useBlocks:db.settings.useBlocks===true,blocks:db.settings.blocks||[]}}
+function overlaps(a,b,c,d){return a<d&&c<b}
+// A seeded random generator makes multiple complete scheduling trials reproducible.
+function random(seed){return ()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296}}
+// Ersatzbegutachter: Nur aktive Hundeführer mit dem höchsten verfügbaren Niveau
+// dürfen einen regulären Begutachter während dessen Hundedurchgang beurteilen.
+function substituteLevel(){
+ const levels=db.people.filter(p=>!p.inactive&&!p.judge).flatMap(p=>(p.dogs||[]).map((d,i)=>d&&dogEnabled(p,i)?levelOf(p,i):-1).filter(n=>n>=0));
+ return levels.length?Math.max(...levels):-1;
+}
+// Nur während der Erstellung eines einzelnen Trainingsblocks gesetzt.
+// Personen mit einem Hund in diesem Block dürfen dort nicht begutachten.
+let currentJudgeExcluded=null;
+function judgeInOwnBlock(person,levelSet){
+ return !!person&&!!levelSet&&(person.dogs||[]).some((dog,i)=>dog&&dogEnabled(person,i)&&levelSet.has(dogDetails(person,i).level));
+}
+// In Blockplanung darf ein Hundeführer mit aktivem Hund im eigenen Block
+// weder als Figurant noch als Begutachter eingesetzt werden.
+function figurantAllowedInCurrentBlock(person){
+ return db.settings.useBlocks!==true||!judgeInOwnBlock(person,currentJudgeExcluded);
+}
+function canJudge(person,handler){
+ if(!person||person.inactive||!handler||person.id===handler.id||judgeInOwnBlock(person,currentJudgeExcluded))return false;
+ if(person.judge)return true;
+ // Ersatzbegutachter dürfen bei Personalengpässen alle Hundeteams beurteilen.
+ // Das höchste verfügbare Niveau wird bei der konkreten Besetzung bevorzugt.
+ return (person.dogs||[]).some(dog=>!!dog);
+}
+function judgeMayVisit(person,placeId){
+ // In getrennten Trainingsblöcken dürfen Begutachter ihren Stammplatz verlassen.
+ return db.settings.useBlocks===true||!person.place||person.place===placeId;
+}
+// Ausserhalb des eigenen Ausbildungsblocks darf eine Person bei Bedarf
+// auch länger als sechs Runden figurieren. Im normalen Modus gilt die Grenze.
+function outsideOwnTrainingBlock(person,levelSet){
+ if(db.settings.useBlocks!==true||!levelSet)return false;
+ const ownLevels=(person.dogs||[]).map((dog,i)=>dog?dogDetails(person,i).level:null).filter(Boolean);
+ return !ownLevels.some(level=>levelSet.has(level));
+}
+function blockLevelSetForCurrentPlan(){
+ const activeLevels=new Set();
+ for(const p of db.people)if(!p.inactive)(p.dogs||[]).forEach((dog,i)=>{if(dog&&dogEnabled(p,i))activeLevels.add(dogDetails(p,i).level)});
+ return activeLevels;
+}
+function judgeChoices(placeId,handler){
+ return db.people.filter(p=>canJudge(p,handler)&&judgeMayVisit(p,placeId))
+  .sort((a,b)=>Number(b.judge)-Number(a.judge)||Number(!((a.dogs||[]).some((d,i)=>d&&dogEnabled(a,i))))-Number(!((b.dogs||[]).some((d,i)=>d&&dogEnabled(b,i))))||Math.max(...(b.dogs||[]).map((d,i)=>d?levelOf(b,i):-1),-1)-Math.max(...(a.dogs||[]).map((d,i)=>d?levelOf(a,i):-1),-1));
+}
+// Ein Begutachter, der selbst Hunde führt, darf während seiner begonnenen
+// Hundesuche-Serie NICHT begutachten, auch nicht in einer Pausenrunde.
+function judgeHandlerConflict(plan){
+ const step=db.settings.duration+db.settings.travel;
+ for(const p of db.people.filter(p=>!p.inactive)){
+  const dogRuns=plan.filter(r=>r.person===p.id).sort((a,b)=>a.start-b.start);
+  if(!dogRuns.length)continue;
+  const expected=(p.dogs||[]).filter((d,i)=>d&&dogEnabled(p,i)).length*db.places.length;
+  const first=dogRuns[0].start;
+  // Bis alle Hunde ihre Rundgänge abgeschlossen haben, ist die Person
+  // ausschliesslich Hundeführer (einschliesslich aller Pausen).
+  const last=dogRuns.length===expected?dogRuns[dogRuns.length-1].start:Infinity;
+  if(plan.some(r=>r.judge===p.id&&r.start>=first&&r.start<=last))return true;
+ }
+ return false;
+}
+// Während der gesamten eigenen Suchserie (auch in Pausen) darf ein
+// Hundeführer niemals als Figurant eingesetzt werden.
+function handlerFigurantConflict(plan){
+ for(const p of db.people.filter(p=>!p.inactive)){
+  const expected=(p.dogs||[]).filter((d,i)=>d&&dogEnabled(p,i)).length*db.places.length;
+  if(!expected)continue;
+  const own=plan.filter(r=>r.person===p.id).sort((a,b)=>a.start-b.start);
+  if(!own.length)continue;
+  const first=own[0].start;
+  const last=own.length===expected?own[own.length-1].start:Infinity;
+  if(plan.some(r=>r.fig.includes(p.id)&&r.start>=first&&r.start<=last))return true;
+ }
+ return false;
+}
+function generate(options={}){try{
+ db.settings=settings();const {duration,travel}=db.settings,base=db.settings.start?minutes(db.settings.start):0,step=duration+travel;
+ if(!db.places.length)throw Error('Bitte Schadenplätze erfassen');
+ const activePeople=db.people.filter(x=>x.inactive!==true);const fixed=activePeople.filter(x=>x.place),floating=activePeople.filter(x=>!x.place);
+ for(const p of db.places){const figCount=Number(p.figCount)||1;const members=fixed.filter(x=>x.place===p.id);if(!activePeople.some(x=>canJudge(x,activePeople.find(y=>y.id!==x.id)||x)&&judgeMayVisit(x,p.id)))throw Error('Kein Begutachter oder geeigneter Ersatz verfügbar für '+p.name);if(activePeople.length<figCount+2)throw Error('Zu wenig Personal für '+p.name)}
+ const teams=activePeople.flatMap(p=>(p.dogs||[]).map((dog,i)=>dog&&dogEnabled(p,i)?({person:p.id,dog,idx:i,home:p.place||null,level:levelOf(p,i)}):null).filter(Boolean));if(!teams.length)throw Error('Keine aktiven Hundeteams erfasst');
+ const required=teams.length*db.places.length,maxRounds=Math.floor(720/step);
+ // A simultaneous run consumes one handler, one judge and the site's figurants.
+ // Never promise three occupied sites if the available people cannot staff them.
+ const staffCosts=db.places.map(p=>2+(Number(p.figCount)||1)).sort((a,b)=>a-b);
+ let maxParallel=0,staffNeeded=0;for(const cost of staffCosts){if(staffNeeded+cost>activePeople.length)break;staffNeeded+=cost;maxParallel++}
+ if(!maxParallel)throw Error('Zu wenig Personal für einen vollständigen Durchgang');
+ const theoreticalRounds=Math.ceil(required/maxParallel);if(!maxRounds)throw Error('Zeitangaben zu gross');
+ let best=null;const repairCandidates=[];
+ // Search many full schedules; score the *whole day*, not just each individual round.
+ const trials=teams.length===5&&db.places.length===3?1250:900; // Begrenzte lokale Suche: vollständige, regelkonforme Pläne vor Optimierung
+ for(let attempt=0;attempt<trials;attempt++){
+  const rng=random(1009+attempt*7919);
+  // Give handlers without a fixed home site a balanced starting site for this trial.
+  // All dogs belonging to one handler receive the same assigned home site.
+  const assigned=new Map(),loads=db.places.map(place=>teams.filter(t=>t.home===place.id).length);
+  const flexibleStarts=db.settings.useBlocks===true;
+  // Im Blockmodus ist der Stammplatz nur eine Präferenz für den Suchstart.
+  // Bei Konflikten dürfen auch fest zugewiesene HF anderswo beginnen.
+  if(flexibleStarts){loads.fill(0);for(const t of teams){if(t.home&&attempt%5===0)loads[db.places.findIndex(p=>p.id===t.home)]++;}}
+  const freePeople=[...new Set(teams.filter(t=>flexibleStarts||!t.home).map(t=>t.person))];
+  freePeople.sort((a,b)=>((attempt+a.length)%7)-((attempt+b.length)%7)||rng()-.5);
+  for(const person of freePeople){const count=teams.filter(t=>t.person===person).length;const min=Math.min(...loads);let choices=loads.map((n,i)=>({n,i})).filter(x=>x.n===min);const own=teams.find(t=>t.person===person)?.home;
+   if(flexibleStarts&&own&&attempt%5===0&&choices.some(x=>db.places[x.i].id===own))choices=choices.filter(x=>db.places[x.i].id===own);
+   const index=choices[Math.floor(rng()*choices.length)].i;assigned.set(person,db.places[index].id);loads[index]+=count}
+  // Assign people without a fixed site (judges and figurants too) to one site
+  // for this entire trial. Balance staffing needs and ensure each site has a judge.
+  const staffSites=new Map();
+  const siteStaff=new Map(db.places.map(p=>[p.id,activePeople.filter(x=>x.place===p.id)]));
+  const freeStaff=activePeople.filter(p=>!p.place).map(p=>({p,sort:rng()})).sort((a,b)=>Number(b.p.judge)-Number(a.p.judge)||a.sort-b.sort).map(x=>x.p);
+  for(const person of freeStaff){
+   const options=db.places.map(place=>{const group=siteStaff.get(place.id),need=Number(place.figCount)||1;
+    const hasJudge=group.some(x=>x.judge);
+    // Judges who also run dogs must have a substitute while searching.
+    // Prefer a stable judging team over a single busy dog handler.
+    const judgeCount=group.filter(x=>x.judge).length;
+    const siteHandlers=teams.filter(t=>(assigned.get(t.person)||t.home)===place.id).length;
+    const score=(person.judge&&!hasJudge?10000:0)
+      +(person.judge&&judgeCount===1?240:0)
+      +Math.max(0,need+1-group.length)*200-group.length*8
+      +siteHandlers*3+rng()*((attempt%4===0)?160:18);
+    return {id:place.id,score};
+   }).sort((a,b)=>b.score-a.score);
+   const dest=options[0].id;staffSites.set(person.id,dest);siteStaff.get(dest).push(person);
+  }
+  if(db.places.some(place=>{const group=siteStaff.get(place.id);return !activePeople.some(x=>canJudge(x,activePeople.find(y=>y.id!==x.id)||x)&&judgeMayVisit(x,place.id))||group.length<(Number(place.figCount)||1)}))continue;
+  const members=new Map(db.places.map(p=>[p.id,siteStaff.get(p.id)]));
+  // Ungebundene Begutachter dürfen zwischen Schadenplätzen wechseln.
+  // Ihre Figuranten-Zuteilung bleibt dagegen an einem einzigen Platz.
+  const judges=new Map(db.places.map(p=>[p.id,activePeople.filter(x=>canJudge(x,activePeople.find(y=>y.id!==x.id)||x)&&judgeMayVisit(x,p.id))]));
+  const states=teams.map((t,i)=>({...t,home:assigned.get(t.person)||t.home,i,done:0,last:-1,first:-1}));
+  // Eleven teams / three sites: try a 3 + 3 + 5 relay instead of
+  // greedily ending with a two-team tail (which necessarily leaves gaps).
+  // The five-team block can occupy all three sites over five rounds.
+  let relayGroups=null;
+  if(teams.length===11&&db.places.length===3&&attempt%3!==0){
+   const byHome=db.places.map(p=>states.filter(t=>t.home===p.id).sort((a,b)=>a.level-b.level||rng()-.5));
+   if(byHome.every(g=>g.length>=2)){
+    const first=[],second=[];
+    for(const group of byHome){first.push(group[0].i);second.push(group[1].i)}
+    relayGroups=[new Set(first),new Set(second),new Set(states.filter(t=>!first.includes(t.i)&&!second.includes(t.i)).map(t=>t.i))];
+   }
+  }
+  const plan=[],streak=new Map(db.people.map(p=>[p.id,0])),judgeStreak=new Map(db.people.map(p=>[p.id,0]));let rounds=0;
+  for(let round=0;round<maxRounds;round++){
+   const previous=new Map();for(const r of plan)previous.set(r.place,r);
+   const candidates=db.places.map(place=>{
+    const arr=[],figCount=Number(place.figCount)||1;
+    for(const t of states){
+     // In relay trials, reserve the final five teams for the five-round
+     // relay. Never open a fourth team in either three-round opening block.
+     if(relayGroups){const group=round<3?0:round<6?1:2;if(!relayGroups[group].has(t.i))continue;}
+     const homeIndex=db.places.findIndex(p=>p.id===t.home);
+     const nextPlace=db.places[(homeIndex+t.done)%db.places.length];
+     if(t.done>=db.places.length||nextPlace.id!==place.id)continue;
+     // After the first search, at most one empty common round is allowed.
+     if(t.done>0&&round-t.last>2)continue;
+     // Prevent two dogs of one person from running simultaneously.
+     for(const j of judgeChoices(place.id,activePeople.find(p=>p.id===t.person))){
+      // Nach Beginn eigener Hundeläufe darf ein Begutachter bis zum
+      // Abschluss aller eigenen Hundeläufe nicht als Begutachter arbeiten.
+      if(states.some(x=>x.person===j.id&&x.done>0&&x.done<db.places.length))continue;
+      const currentBlockLevels=blockLevelSetForCurrentPlan();
+      const pool=activePeople.filter(x=>figurantAllowedInCurrentBlock(x)&&x.id!==t.person&&x.id!==j.id&&((streak.get(x.id)||0)<6||outsideOwnTrainingBlock(x,currentBlockLevels))&&!states.some(y=>y.person===x.id&&y.done>0&&y.done<db.places.length));
+      if(pool.length<figCount)continue;
+      const prev=previous.get(place.id);
+      pool.sort((a,b)=>Number(a.place!==place.id)-Number(b.place!==place.id)||Number(a.judge)-Number(b.judge)||((prev?.fig.includes(b.id)?1:0)-(prev?.fig.includes(a.id)?1:0))*10+(streak.get(a.id)||0)-(streak.get(b.id)||0));
+      const combos=[];
+      function makeCombo(offset,chosen){if(chosen.length===figCount){combos.push(chosen.slice());return}for(let i=offset;i<pool.length;i++){chosen.push(pool[i]);makeCombo(i+1,chosen);chosen.pop();if(combos.length>=20)return}}
+      makeCombo(0,[]);
+      // Keep the fallback combinations, but examine the least judge-heavy ones first.
+      combos.sort((a,b)=>a.filter(x=>x.judge).length-b.filter(x=>x.judge).length);
+      for(const figs of combos){const ids=[t.person,j.id,...figs.map(x=>x.id)];
+       const unfinished=states.filter(s=>s.done>0&&s.done<db.places.length).length;
+       const urgency=t.done>0?240+65*t.done:38;
+       // Start lower-level dogs first, while retaining staffing and fixed rotation constraints.
+       const priority=(3-t.level)*420 + (activePeople.find(p=>p.id===t.person)?.judge?300:0) + (t.done>0?260:0);
+       const wait=t.done>0?Math.max(0,round-t.last-1):0;
+       const scarcity=judges.get(place.id).length===1?12:0;
+       const continuity=figs.reduce((sum,f)=>{
+        if(!prev?.fig.includes(f.id))return sum;
+        const length=streak.get(f.id)||0;
+        return sum+(length<3?220:95);
+       },0)+(prev?.judge===j.id?Math.min(6,judgeStreak.get(j.id)||0)*90+260:0);
+       const judgeFigCount=figs.filter(f=>f.judge).length;
+       const awayFigCount=figs.filter(f=>f.place&&f.place!==place.id).length;
+       const score=priority+urgency+wait*110+scarcity+continuity-judgeFigCount*1100-awayFigCount*850+(j.judge?0:-450)+(t.done===0&&unfinished>db.places.length? -15:0)+rng()*22;
+       arr.push({t,place:place.id,judge:j.id,fig:figs.map(x=>x.id),ids,score});
+      }
+     }
+    }
+    arr.sort((a,b)=>b.score-a.score);return arr.slice(0,45);
+   });
+   // Find a maximum compatible assignment for the current common start time.
+   const order=db.places.map((_,i)=>i).sort((a,b)=>candidates[a].length-candidates[b].length);
+   const used=new Set(),selected=[];let bestRound=[],bestValue=-Infinity,visited=0;
+   function search(pos,score){if(++visited>24000)return;if(pos===order.length){const value=selected.length*10000+score;if(value>bestValue){bestValue=value;bestRound=selected.slice()}return}if(selected.length+order.length-pos<bestRound.length)return;
+    for(const o of candidates[order[pos]]){if(o.ids.some(id=>used.has(id)))continue;for(const id of o.ids)used.add(id);selected.push(o);search(pos+1,score+o.score);selected.pop();for(const id of o.ids)used.delete(id);if(visited>24000)break}search(pos+1,score)}
+   search(0,0);
+   const figures=new Set(bestRound.flatMap(o=>o.fig)),judging=new Set(bestRound.map(o=>o.judge));
+   for(const o of bestRound){const t=o.t;plan.push({start:base+round*step,end:base+round*step+duration,place:o.place,person:t.person,dog:t.dog,dogIndex:t.idx,judge:o.judge,fig:o.fig});t.done++;t.last=round;if(t.first<0)t.first=round}
+   for(const p of db.people){streak.set(p.id,figures.has(p.id)?streak.get(p.id)+1:0);judgeStreak.set(p.id,judging.has(p.id)?judgeStreak.get(p.id)+1:0)}
+   if(bestRound.length)rounds=round+1;
+   if(states.every(t=>t.done===db.places.length))break;
+   // At the 3+3+5 relay boundary, solve the last five teams jointly.
+   // The old greedy choice could strand two teams in a twelfth round.
+   if(relayGroups&&round===5&&bestRound.length===3&&plan.length===18&&attempt<8){
+    const pending=states.filter(t=>t.done===0);
+    if(pending.length===5){
+     const synthetic=[];
+     for(const [pendingIndex,t] of pending.entries()){
+      const home=db.places.findIndex(p=>p.id===t.home);
+      for(let k=0;k<3;k++)synthetic.push({start:base+(6+Math.floor(pendingIndex/2)+k)*step,end:base+(6+Math.floor(pendingIndex/2)+k)*step+duration,
+       place:db.places[(home+k)%3].id,person:t.person,dog:t.dog,dogIndex:t.idx,judge:null,fig:[]});
+     }
+     const solved=balanceTailFive([...plan,...synthetic]);
+     if(solved&&!validate(solved)&&!validateCompletePlan(solved,teams)){
+      plan.splice(0,plan.length,...solved);
+      for(const t of pending){t.done=3;t.last=10;t.first=6}
+      rounds=11;
+      break;
+     }
+    }
+   }
+   // End early only when a complete schedule is already impossible in the remaining horizon.
+  }
+  // Discard any trial that violates the home-site or rotation rules.
+  // In particular, never select a partially built schedule whose first
+  // recorded search is not at the handler's current home site.
+  if(validate(plan))continue;
+  const done=plan.length,gaps=states.reduce((sum,t)=>sum+(t.done>1?Math.max(0,t.last-t.first-t.done+1):0),0);
+  // Priority 1: keep all sites occupied in every common round.
+  const emptySlots=rounds*db.places.length-done;
+  // Empty sites are unavoidable when the available staff can cover fewer
+  // than all sites. Compare against achievable capacity, not all sites.
+  const avoidableEmpty=Math.max(0,rounds*maxParallel-done);
+  const lonely=Array.from({length:rounds},(_,i)=>plan.filter(r=>r.start===base+i*step).length).filter(x=>x===1).length;
+  const awayFigAssignments=plan.reduce((sum,r)=>sum+r.fig.filter(id=>{const p=db.people.find(x=>x.id===id);return p?.place&&p.place!==r.place}).length,0);
+  const judgeFigAssignments=plan.reduce((sum,r)=>sum+r.fig.filter(id=>db.people.find(p=>p.id===id)?.judge).length,0);
+  const figChanges=figureChangeCost(plan);
+  const priorityCost=plan.reduce((sum,r)=>{const team=states.find(t=>t.person===r.person&&t.idx===r.dogIndex);return sum+(team?.level||0)*(r.start-base)/step},0);
+  // Lexicographic preference: completed runs > occupied sites > few pauses > level order > figurant continuity.
+  // A single empty site/round must outweigh every possible pause or level improvement.
+  const substituteRuns=plan.filter(r=>!db.people.find(p=>p.id===r.judge)?.judge).length;
+  // Reguläre Begutachter bevorzugen, ohne vollständige Durchgänge oder
+  // Schadenplatz-Auslastung zu opfern. Pausen nach Möglichkeit vermeiden.
+  const metric=done*1000000000-lonely*65000000-avoidableEmpty*25000000-rounds*5000000-gaps*2200000-substituteRuns*120000-priorityCost*110-judgeFigAssignments*2500-awayFigAssignments*3500-figChanges*8;
+  if(!best||metric>best.metric)best={plan,states,rounds,gaps,emptySlots,lonely,metric};
+  // Keep several distinct complete schedules. The best greedy schedule is not
+  // necessarily the easiest one to compact into fully occupied final rounds.
+  if(done===required&&rounds>theoreticalRounds){
+   const signature=plan.map(r=>r.person+':'+r.place+':'+r.start).join('|');
+   if(!repairCandidates.some(x=>x.signature===signature)){
+    repairCandidates.push({plan:plan.map(r=>({...r,fig:[...r.fig]})),metric,signature});
+    repairCandidates.sort((a,b)=>b.metric-a.metric);
+    if(repairCandidates.length>16)repairCandidates.length=16;
+   }
+  }
+  if(done===required&&rounds===theoreticalRounds&&lonely===0&&gaps===0&&substituteRuns===0)break;
+ }
+ if(!best)throw Error('Kein gültiger Plan gefunden. Bitte Schadenplätze und Hundezuteilungen prüfen.');
+ // Try to compress several complete candidates, not just the single highest
+ // scoring greedy result. Never accept a repaired plan without full validation.
+ if(best.plan.length===required&&best.rounds>theoreticalRounds){
+  for(const candidate of repairCandidates){
+   const compact=balanceTailFive(candidate.plan)||balanceTailFour(candidate.plan)||balanceTailThree(candidate.plan)||balanceSmallSchedule(candidate.plan);
+   if(!compact||validate(compact))continue;
+   const compactRounds=new Set(compact.map(r=>r.start)).size;
+   if(compactRounds<best.rounds){
+    best={...best,plan:compact,rounds:compactRounds,emptySlots:compactRounds*db.places.length-compact.length,lonely:0,gaps:calculateWaits(compact)};
+   }
+   if(best.rounds===theoreticalRounds)break;
+  }
+ }
+ const candidatePlan=best.plan.sort((a,b)=>a.start-b.start||a.place.localeCompare(b.place));
+ // Reorder the final dog runs when this fills otherwise lonely site rounds.
+ // Preserve each dog's site rotation and every person's existing duties.
+ const balanced=best.plan.length===required&&best.rounds>theoreticalRounds?(balanceTailFive(candidatePlan)||balanceTailFour(candidatePlan)||balanceTailThree(candidatePlan)||balanceSmallSchedule(candidatePlan)):null;
+ if(balanced&&!validate(balanced)){candidatePlan.splice(0,candidatePlan.length,...balanced);best.rounds=new Set(candidatePlan.map(r=>r.start)).size;best.emptySlots=best.rounds*db.places.length-candidatePlan.length;best.lonely=[...new Set(candidatePlan.map(r=>r.start))].filter(time=>candidatePlan.filter(r=>r.start===time).length===1).length;best.gaps=calculateWaits(candidatePlan)}
+ // Improve figurant continuity without changing any dog, time, place or judge.
+ optimizeFigures(candidatePlan);
+ const error=validate(candidatePlan);if(error)throw Error('Planungsfehler: '+error);
+ const completeness=validateCompletePlan(candidatePlan,teams);if(completeness)throw Error('Planungsfehler: '+completeness);
+ db.plan=candidatePlan;save();renderPlan();
+ const shortBlocks=countShortFigureBlocks(candidatePlan);
+ const missing=[]; // Vollständigkeit ist unmittelbar zuvor verbindlich geprüft.
+ $('status').textContent=missing.length?'Nicht vollständig planbar: '+best.plan.length+'/'+required+' Durchgänge. Offen: '+missing.join(', '):'Plan erstellt: '+teams.length+' Hundeteams, '+best.plan.length+' Durchgänge, '+best.rounds+' gemeinsame Zeitrunden, '+best.gaps+' Warte-Runden (maximal 1 pro Übergang), '+best.emptySlots+' freie Schadenplatz-Runden, '+best.lonely+' einzelne Runden.';
+ $('status').textContent+=' Figuranten-Blöcke unter 3 Hunden: '+shortBlocks+'.';
+ $('status').textContent+=' Alle Rollenverbote und Hundedurchgänge geprüft.';
+ if(maxParallel<db.places.length)$('status').textContent+=' Personalgrenze: maximal '+maxParallel+' von '+db.places.length+' Schadenplätzen gleichzeitig besetzbar ('+activePeople.length+' aktive Personen).';
+ $('status').className=missing.length?'warning':'ok';
+ }catch(e){db.plan=[];save();renderPlan();$('status').textContent='Kein gültiger Plan erstellt: '+e.message;$('status').className='warning';if(options.throwErrors)throw e;alert(e.message)}}
+// Five-team relay across three sites: all 15 runs in five fully occupied rounds.
+// Unlike the old four-team repair, this can move the final two full blocks together.
+function balanceTailFive(original){
+ if(db.places.length!==3)return null;
+ const step=db.settings.duration+db.settings.travel,duration=db.settings.duration;
+ const times=[...new Set(original.map(r=>r.start))].sort((a,b)=>a-b);
+ if(times.length<6)return null;
+ const people=db.people.filter(p=>!p.inactive),byId=new Map(people.map(p=>[p.id,p]));
+ const level=p=>Math.max(-1,...(p.dogs||[]).map((d,i)=>d&&dogEnabled(p,i)?levelOf(p,i):-1));
+ for(let cut=Math.max(0,times.length-9);cut<times.length-4;cut++){
+  const start=times[cut],prefix=original.filter(r=>r.start<start).map(r=>({...r,fig:[...r.fig]}));
+  const tail=original.filter(r=>r.start>=start);
+  if(tail.length!==15)continue;
+  const groups=new Map();for(const r of tail){const k=r.person+'|'+r.dogIndex;if(!groups.has(k))groups.set(k,[]);groups.get(k).push(r)}
+  if(groups.size!==5||[...groups.values()].some(g=>g.length!==3))continue;
+  const dogs=[...groups.values()].map(g=>g.sort((a,b)=>a.start-b.start));
+  // Place constrained handlers first, but preserve the order within each dog.
+  dogs.sort((a,b)=>Number(byId.get(b[0].person)?.judge)-Number(byId.get(a[0].person)?.judge));
+  const slots=Array.from({length:5},(_,i)=>start+i*step),occupied=new Set(),assignments=[];
+  const prior=new Map();for(const r of prefix)prior.set(r.person+'|'+r.dogIndex,r.start);
+  const figHome=new Map();for(const r of prefix)for(const id of r.fig)if(!byId.get(id)?.place)figHome.set(id,r.place);
+  let solution=null,patterns=0,staffNodes=0;
+  const fiveTeamExact=groups.size===5&&prefix.length===0;
+  const maxStaffNodes=fiveTeamExact?1800000:650000;
+  const maxPatterns=fiveTeamExact?350000:180000;
+  const choices=[];for(let a=0;a<3;a++)for(let b=a+1;b<5;b++)for(let c=b+1;c<5;c++)if(b-a<=2&&c-b<=2)choices.push([a,b,c]);
+  function staff(rows){
+   const result=[...prefix,...rows];const byRound=slots.map(t=>rows.filter(r=>r.start===t));
+   function roundStaff(round){
+    if(solution||++staffNodes>maxStaffNodes)return;
+    if(round===5){if(!validate(result))solution=result.slice().sort((a,b)=>a.start-b.start||a.place.localeCompare(b.place));return}
+    const current=byRound[round];
+    const handlers=new Set(current.map(r=>r.person));
+    // Bereits begonnene Suchserien sperren Begutachter- und Figurantenrollen,
+    // auch wenn ein Hund in dieser Runde aussetzt.
+    const searching=new Set();
+    for(const dogRuns of dogs){
+     const first=assignments.filter(x=>x.run.person===dogRuns[0].person&&x.run.dogIndex===dogRuns[0].dogIndex).map(x=>x.round).sort((a,b)=>a-b);
+     if(first.length&&round>=first[0]&&round<=first[first.length-1])searching.add(dogRuns[0].person);
+    }
+    function fill(k,busy){
+     if(solution||++staffNodes>maxStaffNodes)return;
+     if(k===3){roundStaff(round+1);return}
+     const r=current[k],count=Number(db.places.find(p=>p.id===r.place)?.figCount)||1;
+     const old=tail.find(x=>x.person===r.person&&x.dogIndex===r.dogIndex&&x.place===r.place);
+     const js=judgeChoices(r.place,byId.get(r.person)).filter(p=>!busy.has(p.id)&&!handlers.has(p.id)&&!searching.has(p.id));
+     js.sort((a,b)=>Number(b.judge)-Number(a.judge)||level(b)-level(a)||Number(a.id!==old.judge)-Number(b.id!==old.judge));
+     for(const j of js){
+      const pool=people.filter(p=>figurantAllowedInCurrentBlock(p)&&!handlers.has(p.id)&&!searching.has(p.id)&&p.id!==j.id&&!busy.has(p.id)&&(!figHome.has(p.id)||figHome.get(p.id)===r.place));
+      pool.sort((a,b)=>Number(a.place!==r.place)-Number(b.place!==r.place)||Number(old.fig.includes(b.id))-Number(old.fig.includes(a.id))||Number(a.judge)-Number(b.judge));
+      const picked=[];
+      function choose(offset){
+       if(solution||++staffNodes>maxStaffNodes)return;
+       if(picked.length===count){
+        r.judge=j.id;r.fig=picked.map(p=>p.id);
+        const added=[];for(const p of picked)if(!p.place&&!figHome.has(p.id)){figHome.set(p.id,r.place);added.push(p.id)}
+        const next=new Set(busy);next.add(r.person);next.add(j.id);picked.forEach(p=>next.add(p.id));
+        fill(k+1,next);
+        for(const id of added)figHome.delete(id);
+        if(!solution){r.judge=null;r.fig=[]}return;
+       }
+       for(let i=offset;i<pool.length;i++){picked.push(pool[i]);choose(i+1);picked.pop();if(solution||staffNodes>maxStaffNodes)return}
+      }
+      choose(0);if(solution||staffNodes>maxStaffNodes)return;
+     }
+    }
+    fill(0,new Set());
+   }
+   roundStaff(0);
+  }
+  function assign(i){
+   if(solution||++patterns>maxPatterns)return;
+   if(i===5){
+    if(slots.some((_,r)=>assignments.filter(x=>x.round===r).length!==3))return;
+    staff(assignments.map(x=>({...x.run,start:slots[x.round],end:slots[x.round]+duration,judge:null,fig:[]})));return;
+   }
+   const dog=dogs[i],key=dog[0].person+'|'+dog[0].dogIndex;
+   for(const rounds of choices){
+    if(prior.has(key)&&slots[rounds[0]]-prior.get(key)>2*step)continue;
+    const keys=rounds.map((r,j)=>r+'|'+dog[j].place);
+    if(keys.some(k=>occupied.has(k)))continue;
+    if(rounds.some(r=>assignments.filter(x=>x.round===r).length>=3))continue;
+    // No team may search twice in one round, including a second dog.
+    if(rounds.some(r=>assignments.some(x=>x.round===r&&x.run.person===dog[0].person)))continue;
+    keys.forEach(k=>occupied.add(k));rounds.forEach((r,j)=>assignments.push({round:r,run:dog[j]}));
+    assign(i+1);assignments.splice(assignments.length-3,3);keys.forEach(k=>occupied.delete(k));
+    if(solution||patterns>maxPatterns||staffNodes>maxStaffNodes)return;
+   }
+  }
+  assign(0);if(solution)return solution;
+ }
+ return null;
+}
+// Three-site finish: four teams share four rounds, each taking exactly one
+// rest round. Try progressively earlier cutoffs so an existing sparse tail
+// can be compressed, without changing earlier assignments.
+function balanceTailFour(original){
+ if(db.places.length!==3)return null;
+ const step=db.settings.duration+db.settings.travel,duration=db.settings.duration;
+ const times=[...new Set(original.map(r=>r.start))].sort((a,b)=>a-b);
+ if(times.length<5)return null;
+ const last=times[times.length-1];
+ if(original.filter(r=>r.start===last).length===3)return null;
+ const people=db.people.filter(p=>p.inactive!==true),byId=new Map(people.map(p=>[p.id,p]));
+ for(let cut=Math.max(0,times.length-9);cut<=times.length-4;cut++){
+  const start=times[cut],prefix=original.filter(r=>r.start<start).map(r=>({...r,fig:[...r.fig]}));
+  const tail=original.filter(r=>r.start>=start);
+  if(tail.length!==12)continue;
+  const groups=new Map();for(const r of tail){const key=r.person+'|'+r.dogIndex;if(!groups.has(key))groups.set(key,[]);groups.get(key).push(r)}
+  if(groups.size!==4||[...groups.values()].some(g=>g.length!==3))continue;
+  const dogs=[...groups.values()].map(g=>g.sort((a,b)=>a.start-b.start));
+  // A dog's previous run in the prefix must remain at most two slots away.
+  const prior=new Map();for(const r of prefix)prior.set(r.person+'|'+r.dogIndex,r.start);
+  const figHome=new Map();for(const r of prefix)for(const id of r.fig){if(!byId.get(id)?.place)figHome.set(id,r.place)}
+  const tailTimes=Array.from({length:4},(_,i)=>start+i*step);
+  let solution=null,nodes=0;
+  const occupied=new Set(),assignments=[];
+  function placeDog(i){
+   if(solution||++nodes>160000)return;
+   if(i===dogs.length){
+    if(tailTimes.some((_,round)=>assignments.filter(x=>x.round===round).length!==3))return;
+    const rows=assignments.map(x=>({...x.run,start:tailTimes[x.round],end:tailTimes[x.round]+duration,judge:null,fig:[]}));
+    const result=[...prefix,...rows];
+    const byRound=tailTimes.map(t=>rows.filter(r=>r.start===t));
+    function staff(round){
+     if(solution||++nodes>160000)return;
+     if(round===4){if(!validate(result))solution=result.sort((a,b)=>a.start-b.start||a.place.localeCompare(b.place));return}
+     const current=byRound[round];
+     function fill(k,busy){
+      if(solution||++nodes>160000)return;
+      if(k===3){staff(round+1);return}
+      const r=current[k],place=db.places.find(p=>p.id===r.place),count=Number(place.figCount)||1;
+      const originalRun=original.find(x=>x.person===r.person&&x.dogIndex===r.dogIndex&&x.place===r.place);
+      const judges=judgeChoices(r.place,byId.get(r.person)).filter(p=>!busy.has(p.id));
+      judges.sort((a,b)=>Number(b.judge)-Number(a.judge)||Number(a.id!==originalRun.judge)-Number(b.id!==originalRun.judge));
+      for(const j of judges){
+       const pool=people.filter(p=>figurantAllowedInCurrentBlock(p)&&p.id!==r.person&&p.id!==j.id&&!busy.has(p.id)&&(!p.place||p.place===r.place)&&(!figHome.has(p.id)||figHome.get(p.id)===r.place));
+       pool.sort((a,b)=>Number(originalRun.fig.includes(b.id))-Number(originalRun.fig.includes(a.id))||Number(a.judge)-Number(b.judge));
+       const picked=[];
+       function choose(offset){
+        if(solution||++nodes>160000)return;
+        if(picked.length===count){
+         r.judge=j.id;r.fig=picked.map(p=>p.id);
+         const added=[];for(const p of picked)if(!p.place&&!figHome.has(p.id)){figHome.set(p.id,r.place);added.push(p.id)}
+         const next=new Set(busy);next.add(r.person);next.add(j.id);picked.forEach(p=>next.add(p.id));
+         fill(k+1,next);
+         for(const id of added)figHome.delete(id);
+         if(!solution){r.judge=null;r.fig=[]}return;
+        }
+        for(let a=offset;a<pool.length;a++){picked.push(pool[a]);choose(a+1);picked.pop();if(solution||nodes>160000)return}
+       }
+       choose(0);if(solution||nodes>160000)return;
+      }
+     }
+     fill(0,new Set());
+    }
+    staff(0);return;
+   }
+   const dog=dogs[i],key=dog[0].person+'|'+dog[0].dogIndex;
+   for(let pause=0;pause<4;pause++){
+    const rounds=[0,1,2,3].filter(r=>r!==pause);
+    if(prior.has(key)&&tailTimes[rounds[0]]-prior.get(key)>2*step)continue;
+    const keys=rounds.map((r,j)=>r+'|'+dog[j].place);
+    if(keys.some(k=>occupied.has(k)))continue;
+    keys.forEach(k=>occupied.add(k));rounds.forEach((r,j)=>assignments.push({round:r,place:dog[j].place,run:dog[j]}));
+    placeDog(i+1);
+    assignments.splice(assignments.length-3,3);keys.forEach(k=>occupied.delete(k));
+    if(solution||nodes>160000)return;
+   }
+  }
+  placeDog(0);
+  if(solution)return solution;
+ }
+ return null;
+}
+// For two sites and an odd number of teams, replace the two lonely final
+// rounds by a three-team relay: one handler rests for one round.
+function balanceTailThree(original){
+ if(db.places.length!==2||original.length%2!==0)return null;
+ const step=db.settings.duration+db.settings.travel,base=db.settings.start?minutes(db.settings.start):0,duration=db.settings.duration;
+ const times=[...new Set(original.map(r=>r.start))].sort((a,b)=>a-b);
+ if(times.length<4)return null;
+ const last=times[times.length-1],penultimate=times[times.length-2];
+ if(original.filter(r=>r.start===last).length!==1||original.filter(r=>r.start===penultimate).length!==1)return null;
+ const tailStart=times[times.length-4],tailTimes=[tailStart,tailStart+step,tailStart+2*step];
+ const prefix=original.filter(r=>r.start<tailStart).map(r=>({...r,fig:[...r.fig]}));
+ const tail=original.filter(r=>r.start>=tailStart);
+ if(tail.length!==6)return null;
+ const groups=new Map();for(const r of tail){const key=r.person+'|'+r.dogIndex;if(!groups.has(key))groups.set(key,[]);groups.get(key).push(r)}
+ if(groups.size!==3||[...groups.values()].some(g=>g.length!==2))return null;
+ const dogs=[...groups.values()].map(g=>g.sort((a,b)=>a.start-b.start));
+ // Preserve each dog's first/second site; try every valid three-round pattern.
+ const assignments=[];
+ function placeDog(i,slots){if(i===dogs.length){assignments.push(slots.slice());return}
+  for(let a=0;a<3;a++)for(let b=a+1;b<3&&b<=a+2;b++){
+   if(slots.some(x=>(x.round===a&&x.place===dogs[i][0].place)||(x.round===b&&x.place===dogs[i][1].place)))continue;
+   placeDog(i+1,[...slots,{round:a,place:dogs[i][0].place,run:dogs[i][0]},{round:b,place:dogs[i][1].place,run:dogs[i][1]}]);
+  }}placeDog(0,[]);
+ const people=db.people.filter(p=>p.inactive!==true),byId=new Map(people.map(p=>[p.id,p]));
+ // Figurants without a home site must remain on one site throughout the day.
+ const figHome=new Map();for(const r of prefix)for(const id of r.fig){if(!byId.get(id)?.place)figHome.set(id,r.place)}
+ const ordered=assignments.filter(a=>a.length===6&&tailTimes.every((_,round)=>a.filter(x=>x.round===round).length===2));
+ for(const assignment of ordered){
+  const candidate=assignment.map(x=>({...x.run,start:tailTimes[x.round],end:tailTimes[x.round]+duration,fig:[]}));
+  const result=[...prefix,...candidate];
+  const roundGroups=tailTimes.map(t=>candidate.filter(r=>r.start===t));
+  let nodes=0;
+  function assign(round){if(++nodes>45000)return false;if(round===3)return !validate(result);
+   const rows=roundGroups[round];
+   function fill(k,busy){if(k===rows.length)return assign(round+1);
+    const r=rows[k],place=db.places.find(p=>p.id===r.place),count=Number(place.figCount)||1;
+    const judgePool=judgeChoices(r.place,byId.get(r.person));
+    judgePool.sort((a,b)=>Number(b.judge)-Number(a.judge)||Number(a.id!==r.judge)-Number(b.id!==r.judge));
+    for(const judge of judgePool){if(busy.has(judge.id))continue;
+     const figPool=people.filter(p=>figurantAllowedInCurrentBlock(p)&&p.id!==r.person&&p.id!==judge.id&&!busy.has(p.id)&&(!figHome.has(p.id)||figHome.get(p.id)===r.place));
+     figPool.sort((a,b)=>Number(a.place!==r.place)-Number(b.place!==r.place)||Number(!r.fig.includes(a.id))-Number(!r.fig.includes(b.id))||Number(a.judge)-Number(b.judge));
+     function choose(start,ids){if(ids.length===count){const oldJudge=r.judge,oldFig=r.fig;r.judge=judge.id;r.fig=ids.slice();
+       const added=[];for(const id of ids)if(!byId.get(id).place&&!figHome.has(id)){figHome.set(id,r.place);added.push(id)}
+       const next=new Set(busy);next.add(r.person);next.add(judge.id);ids.forEach(id=>next.add(id));
+       if(fill(k+1,next))return true;
+       for(const id of added)figHome.delete(id);r.judge=oldJudge;r.fig=oldFig;return false}
+      for(let i=start;i<figPool.length;i++){ids.push(figPool[i].id);if(choose(i+1,ids))return true;ids.pop();if(nodes>45000)return false}return false}
+     if(choose(0,[]))return true;
+    }return false}
+   return fill(0,new Set())}
+  if(assign(0))return result.sort((a,b)=>a.start-b.start||a.place.localeCompare(b.place));
+ }
+ return null;
+}
+// Exact small-schedule reordering: make all sites busy in the same rounds
+// rather than finishing with a single dog on an otherwise empty site.
+function calculateWaits(plan){const step=db.settings.duration+db.settings.travel;const groups=new Map();for(const r of plan){const key=r.person+'|'+r.dogIndex;if(!groups.has(key))groups.set(key,[]);groups.get(key).push(r.start)}let gaps=0;for(const times of groups.values()){times.sort((a,b)=>a-b);for(let i=1;i<times.length;i++)gaps+=(times[i]-times[i-1])/step-1}return gaps}
+function balanceSmallSchedule(original){
+ const n=db.places.length,N=original.length;
+ if(n<2||n>3||N>18||N%n!==0)return null;
+ const target=N/n,step=db.settings.duration+db.settings.travel,base=db.settings.start?minutes(db.settings.start):0,duration=db.settings.duration;
+ const runs=original.map(r=>({...r,fig:[...r.fig]}));
+ const byDog=new Map();runs.forEach((r,i)=>{const key=r.person+'|'+r.dogIndex;if(!byDog.has(key))byDog.set(key,[]);byDog.get(key).push(i)});
+ const prev=new Array(N).fill(-1);
+ for(const indices of byDog.values()){indices.sort((a,b)=>runs[a].start-runs[b].start);for(let j=1;j<indices.length;j++)prev[indices[j]]=indices[j-1]}
+ const sites=db.places.map(p=>runs.map((r,i)=>r.place===p.id?i:-1).filter(i=>i>=0));
+ if(sites.some(x=>x.length!==target))return null;
+ const assigned=new Array(N).fill(-1),figAssigned=new Array(N),used=new Set();
+ // Floating staff may be allocated to one site, but never both.
+ const floatingSite=new Map();
+ for(const r of runs){const j=db.people.find(p=>p.id===r.judge);if(j&&!j.place){const old=floatingSite.get(j.id);if(old&&old!==r.place)return null;floatingSite.set(j.id,r.place)}}
+ const figOptions=sites.map((indices,site)=>{
+  const place=db.places[site],count=Number(place.figCount)||1;
+  const pool=db.people.filter(p=>p.inactive!==true&&figurantAllowedInCurrentBlock(p));
+  return {pool,count};
+ });
+ let visited=0,solution=null;
+ function dfs(round){
+  if(++visited>700000)return false;
+  if(round===target){
+   const candidate=runs.map((r,i)=>({...r,fig:figAssigned[i],start:base+assigned[i]*step,end:base+assigned[i]*step+duration}));
+   if(!validate(candidate)){solution=candidate.sort((a,b)=>a.start-b.start||a.place.localeCompare(b.place));return true}
+   return false;
+  }
+  const choices=sites.map(indices=>indices.filter(i=>!used.has(i)&&(prev[i]<0||(assigned[prev[i]]>=0&&round-assigned[prev[i]]<=2))));
+  if(choices.some(a=>!a.length))return false;
+  choices.forEach(a=>a.sort((i,j)=>Math.abs(runs[i].start-base-round*step)-Math.abs(runs[j].start-base-round*step)));
+  function combine(site,busy,chosen){
+   if(site===n){for(const [i,fig] of chosen){assigned[i]=round;figAssigned[i]=fig;used.add(i)}
+    const found=dfs(round+1);if(found)return true;
+    for(const [i] of chosen){assigned[i]=-1;figAssigned[i]=null;used.delete(i)}return false;
+   }
+   const {pool,count}=figOptions[site];
+   for(const i of choices[site]){
+    const r=runs[i];if(busy.has(r.person)||busy.has(r.judge))continue;
+    const available=pool.filter(p=>figurantAllowedInCurrentBlock(p)&&p.id!==r.person&&p.id!==r.judge&&!busy.has(p.id)&&(!floatingSite.has(p.id)||floatingSite.get(p.id)===r.place));
+    available.sort((a,b)=>Number(a.place!==r.place)-Number(b.place!==r.place)||Number(r.fig.includes(b.id))-Number(r.fig.includes(a.id))||Number(a.judge)-Number(b.judge));
+    const fig=[];
+    function select(offset){
+     if(fig.length===count){
+      const added=[];for(const p of fig){if(!p.place&&!floatingSite.has(p.id)){floatingSite.set(p.id,r.place);added.push(p.id)}}
+      const nextBusy=new Set(busy);nextBusy.add(r.person);nextBusy.add(r.judge);fig.forEach(p=>nextBusy.add(p.id));
+      const found=combine(site+1,nextBusy,[...chosen,[i,fig.map(p=>p.id)]]);
+      if(found)return true;
+      for(const id of added)floatingSite.delete(id);
+      return false;
+     }
+     for(let j=offset;j<available.length;j++){
+      fig.push(available[j]);if(select(j+1))return true;fig.pop();
+      if(visited>700000)return false;
+     }
+     return false;
+    }
+    if(select(0))return true;
+   }
+   return false;
+  }
+  return combine(0,new Set(),[]);
+ }
+ dfs(0);return solution;
+}
+// Penalize unnecessary changes and especially one-dog figurant assignments.
+function figureChangeCost(plan){
+ // Prefer blocks of 3–6 consecutive dogs per figurant. Shorter blocks
+ // are permitted only when staffing/rotation makes them unavoidable.
+ const step=db.settings.duration+db.settings.travel;
+ let cost=0;
+ for(const place of db.places){
+  const runs=plan.filter(r=>r.place===place.id).sort((a,b)=>a.start-b.start);
+  const ids=[...new Set(runs.flatMap(r=>r.fig))];
+  for(const id of ids){
+   let block=0,previousStart=null;
+   function finish(){
+    if(!block)return;
+    if(block===1)cost+=220;
+    else if(block===2)cost+=100;
+    else cost+=2;
+    block=0;
+   }
+   for(const r of runs){
+    if(!r.fig.includes(id)){finish();previousStart=null;continue}
+    if(previousStart!==null&&r.start!==previousStart+step)finish();
+    block++;previousStart=r.start;
+   }
+   finish();
+  }
+  // Strongly avoid qualified judges as figurants; allow only when necessary to keep runs staffed.
+  for(const r of runs)for(const id of r.fig){
+   if(db.people.find(p=>p.id===id)?.judge)cost+=2500;
+  }
+ }
+ return cost;
+}
+function countShortFigureBlocks(plan){
+ const step=db.settings.duration+db.settings.travel;
+ let count=0;
+ for(const place of db.places){
+  const runs=plan.filter(r=>r.place===place.id).sort((a,b)=>a.start-b.start);
+  for(const id of new Set(runs.flatMap(r=>r.fig))){
+   let n=0,prev=null;
+   const finish=()=>{if(n>0&&n<3)count++;n=0};
+   for(const r of runs){
+    if(!r.fig.includes(id)){finish();prev=null;continue}
+    if(prev!==null&&r.start!==prev+step)finish();
+    n++;prev=r.start;
+   }
+   finish();
+  }
+ }
+ return count;
+}
+// Local search: reuse existing figurants whenever it remains valid.
+function optimizeFigures(plan){
+ let current=figureChangeCost(plan);
+ for(let pass=0;pass<4;pass++){
+  let changed=false;
+  for(const place of db.places){
+   const runs=plan.filter(r=>r.place===place.id).sort((a,b)=>a.start-b.start);
+   for(let k=0;k<runs.length;k++){
+    const r=runs[k],near=[runs[k-1],runs[k+1]].filter(Boolean);
+    const proposed=[...new Set(near.flatMap(x=>x.fig))];
+    for(let slot=0;slot<r.fig.length;slot++){
+     let bestId=r.fig[slot],bestCost=current;
+     for(const id of proposed){
+      if(id===r.fig[slot]||id===r.person||id===r.judge||r.fig.includes(id))continue;
+      const person=db.people.find(x=>x.id===id);
+      if(!person||person.inactive===true||(!person.place&&!plan.some(x=>x.place===r.place&&(x.fig.includes(id)||x.judge===id))))continue;
+      // Never replace a non-judge figurant with a qualified judge during local optimization.
+      if(person.judge&&!db.people.find(x=>x.id===r.fig[slot])?.judge)continue;
+      const old=r.fig[slot];r.fig[slot]=id;
+      if(!validate(plan)){
+       const cost=figureChangeCost(plan);
+       if(cost<bestCost){bestCost=cost;bestId=id}
+      }
+      r.fig[slot]=old;
+     }
+     if(bestId!==r.fig[slot]){r.fig[slot]=bestId;current=bestCost;changed=true}
+    }
+   }
+  }
+  if(!changed)break;
+ }
+}
+$('generate').onclick=()=>{if($('useBlocks').checked)generateBlocks();else{db.planBlocks=[];generate()}};
+function name(id){return db.people.find(p=>p.id===id)?.name||'?'}function placeName(id){return db.places.find(p=>p.id===id)?.name||'?'}
+function validate(plan){if(judgeHandlerConflict(plan))return 'Begutachter während eigener Hundeführer-Pause eingesetzt';if(handlerFigurantConflict(plan))return 'Hundeführer während eigener Suchserie als Figurant eingesetzt';const {duration,travel,start}=db.settings,step=duration+travel,base=start?minutes(start):0,figureRounds=new Map();
+ // Die 6-Runden-Grenze gilt im eigenen Trainingsblock. Bei Einsätzen in
+ // fremden Blöcken darf sie überschritten werden, falls die Planung das braucht.
+ const blockForLevel=new Map();
+ if(db.settings.useBlocks===true)configuredBlocks().forEach((b,i)=>(b.levels||[]).forEach(l=>blockForLevel.set(l,i)));
+ const blockAtRound=new Map();
+ for(const r of plan){
+  const round=(r.start-base)/step;
+  const handler=db.people.find(p=>p.id===r.person);
+  const level=handler?dogDetails(handler,r.dogIndex).level:null;
+  blockAtRound.set(round,blockForLevel.get(level));
+  if(db.settings.useBlocks===true){
+   const blockLevels=new Set(configuredBlocks()[blockForLevel.get(level)]?.levels||[]);
+   if(r.fig.some(id=>judgeInOwnBlock(db.people.find(p=>p.id===id),blockLevels)))
+    return 'Hundeführer im eigenen Trainingsblock als Figurant eingesetzt';
+   const judge=db.people.find(p=>p.id===r.judge);
+   const ownBlock=blockForLevel.get(level);
+   if(ownBlock!==undefined&&judgeInOwnBlock(judge,new Set(configuredBlocks()[ownBlock]?.levels||[])))
+    return 'Begutachter im eigenen Trainingsblock eingesetzt';
+  }
+  for(const id of r.fig){if(!figureRounds.has(id))figureRounds.set(id,new Set());figureRounds.get(id).add(round)}
+ }
+ for(const [id,rounds] of figureRounds){
+  const person=db.people.find(p=>p.id===id);
+  const ownBlocks=new Set((person?.dogs||[]).map((dog,i)=>dog&&dogEnabled(person,i)?blockForLevel.get(dogDetails(person,i).level):undefined).filter(x=>x!==undefined));
+  let streak=0,last=-Infinity;
+  for(const round of [...rounds].sort((a,b)=>a-b)){
+   const inOwnBlock=db.settings.useBlocks!==true||ownBlocks.has(blockAtRound.get(round));
+   streak=inOwnBlock?(round===last+1?streak+1:1):0;
+   if(streak>6)return 'Figurant mehr als 6 Runden hintereinander im eigenen Trainingsblock';
+   last=round;
+  }
+ }
+ for(const r of plan){if([r.person,r.judge,...r.fig].some(id=>db.people.find(p=>p.id===id)?.inactive===true))return 'Nicht eingesetzte Person im Trainingsplan';if(r.end<=r.start)return 'Ungültige Dauer';if(r.fig.length!==(Number(db.places.find(p=>p.id===r.place)?.figCount)||1))return 'Falsche Figurantenanzahl';if(r.judge===r.person||r.fig.includes(r.person)||r.fig.includes(r.judge)||new Set(r.fig).size!==r.fig.length)return 'Doppelrolle in einem Durchgang';if(!judgeMayVisit(db.people.find(p=>p.id===r.judge)||{},r.place)||!canJudge(db.people.find(p=>p.id===r.judge),db.people.find(p=>p.id===r.person)))return 'Begutachter nicht berechtigt';if(r.fig.some(id=>!db.people.some(x=>x.id===id)))return 'Unbekannter Figurant';for(const other of plan){if(other===r||!overlaps(r.start,r.end,other.start,other.end))continue;if(other.place===r.place)return 'Schadenplatz doppelt belegt';const a=[r.person,r.judge,...r.fig],b=[other.person,other.judge,...other.fig];if(a.some(id=>b.includes(id)))return 'Person doppelt belegt'}}
+ // Every dog must start at its own place and never repeat a place.
+ const floatingSites=new Map();for(const r of plan){for(const id of r.fig){const person=db.people.find(p=>p.id===id);if(person&&!person.place){if(floatingSites.has(id)&&floatingSites.get(id)!==r.place)return 'Person ohne festen Schadenplatz an mehreren Plätzen eingesetzt';floatingSites.set(id,r.place)}}}
+ const byDog=new Map();for(const r of plan){const key=r.person+'|'+r.dogIndex;if(!byDog.has(key))byDog.set(key,[]);byDog.get(key).push(r)}const freeHomes=new Map();for(const entries of byDog.values()){entries.sort((a,b)=>a.start-b.start);const owner=db.people.find(p=>p.id===entries[0].person);if(owner?.place&&entries[0].place!==owner.place&&db.settings.useBlocks!==true)return 'Hund startet nicht am eigenen Schadenplatz';if(!owner?.place){const old=freeHomes.get(owner?.id);if(old&&old!==entries[0].place)return 'Hunde desselben Hundeführers haben unterschiedliche Startplätze';freeHomes.set(owner?.id,entries[0].place)}if(new Set(entries.map(r=>r.place)).size!==entries.length)return 'Hund besucht Schadenplatz doppelt';const homeIndex=db.places.findIndex(p=>p.id===entries[0].place);for(let i=0;i<entries.length;i++){if(entries[i].place!==db.places[(homeIndex+i)%db.places.length].id)return 'Falsche Rotationsreihenfolge';if(i>0&&entries[i].start-entries[i-1].start>2*step)return 'Mehr als eine Pausenrunde zwischen Hundesuchen'}}return ''}
+// Unabhängige Endprüfung: keine fehlenden oder mehrfachen Hundedurchgänge,
+// keine Rollen während der eigenen Suchserie und keine verdeckten Doppelrollen.
+function validateCompletePlan(plan,teams){
+ const n=db.places.length,expected=new Map();
+ for(const t of teams)expected.set(t.person+'|'+t.idx,n);
+ const actual=new Map();
+ for(const r of plan){
+  const key=r.person+'|'+r.dogIndex;
+  if(!expected.has(key))return 'Nicht angemeldetes Hundeteam im Plan';
+  actual.set(key,(actual.get(key)||0)+1);
+ }
+ for(const [key,count] of expected){if((actual.get(key)||0)!==count)return 'Hundeteam nicht vollständig eingeplant';}
+ if(judgeHandlerConflict(plan))return 'Begutachter während eigener Suchserie eingesetzt';
+ if(handlerFigurantConflict(plan))return 'Figurant während eigener Suchserie eingesetzt';
+ return '';
+}
+function renderPlan(){
+ const head=$('scheduleHead'),body=$('schedule'),summary=$('figurantSummary');head.replaceChildren();body.replaceChildren();summary.replaceChildren();
+ const hr=el('tr');hr.append(el('th',db.settings.start?'Startzeit':'Runde'));
+ db.places.forEach(p=>hr.append(el('th',p.name)));head.append(hr);
+ const times=[...new Set(db.plan.map(r=>r.start))].sort((a,b)=>a-b);
+ const segments=db.settings.useBlocks===true&&Array.isArray(db.planBlocks)?db.planBlocks:[];
+ const step=db.settings.duration+db.settings.travel;
+ function addBlockHeading(segment){
+  const tr=el('tr');tr.className='block-heading';const th=el('th');th.colSpan=db.places.length+1;
+  th.textContent='TRAININGSBLOCK '+segment.number+' · '+segment.name+' — '+segment.rounds+' Runden';tr.append(th);body.append(tr);
+ }
+ function addBlockPause(segment){
+  const tr=el('tr');tr.className='block-break';
+  const th=el('th',db.settings.start?clock(segment.pauseStart):'Pause');tr.append(th);
+  const td=el('td','PAUSE ZWISCHEN DEN TRAININGSBLÖCKEN'+(db.settings.start?' · '+clock(segment.pauseStart)+'–'+clock(segment.pauseEnd):' · 1 Runde'));
+  td.colSpan=db.places.length;tr.append(td);body.append(tr);
+ }
+ let lastSegment=null;
+ const figurantTotals=new Map();for(const r of db.plan)for(const id of r.fig)figurantTotals.set(id,(figurantTotals.get(id)||0)+1);
+ function figurantDetail(ids){const line=el('div');line.className='plan-detail';const key=el('span','Figuranten');key.className='plan-label';const val=el('span');val.className='plan-value';ids.forEach((id,i)=>{if(i)val.append(document.createTextNode(', '));const span=el('span',name(id));if((figurantTotals.get(id)||0)>6){span.className='fig-over-six';span.title='Mehr als 6 Hundedurchgänge im gesamten Trainingsplan ('+figurantTotals.get(id)+')';}val.append(span)});line.append(key,val);return line}
+ function detail(label,value,extra=''){
+  const line=el('div');line.className='plan-detail'+(extra?' '+extra:'');
+  const key=el('span',label);key.className='plan-label';
+  const val=el('span',value);val.className='plan-value';if(extra==='plan-detail--feeding')val.classList.add(value==='✓'?'is-yes':'is-no');line.append(key,val);return line;
+ }
+ times.forEach(time=>{
+  const segment=segments.find(b=>time>=b.start&&time<=b.last);
+  if(segment&&segment!==lastSegment){
+   if(lastSegment)addBlockPause(lastSegment);
+   addBlockHeading(segment);lastSegment=segment;
+  }
+  const tr=el('tr');tr.append(el('th',db.settings.start?clock(time):'Runde '+(Math.round(time/(db.settings.duration+db.settings.travel))+1)));
+  db.places.forEach(p=>{
+   const td=el('td'),index=db.plan.findIndex(r=>r.start===time&&r.place===p.id);
+   if(index>=0){
+    const r=db.plan[index];td.append(el('strong',name(r.person)+' / '+r.dog));
+    if(db.settings.start)td.append(el('div','Bis '+clock(r.end)));
+    const details=el('div');details.className='plan-details';
+    details.append(detail('Begutachter',name(r.judge)),figurantDetail(r.fig));
+    const info=dogInfo(r.person,r.dogIndex);
+    if(info)details.append(detail('Marker/Anweisung',info.marker||'–'),detail('Gegenstand',info.object||'–'),detail('Füttern',info.feeding?'✓':'✗','plan-detail--feeding'));
+    td.append(details);
+    const edit=button('Zeit ändern',()=>{
+     const s=prompt('Neuer Start (HH:MM)',clock(r.start));if(s===null)return;
+     if(!/^([01]\d|2[0-3]):[0-5]\d$/.test(s))return alert('Zeitformat HH:MM verwenden');
+     const start=minutes(s),duration=r.end-r.start,copy=db.plan.map(x=>({...x,fig:[...x.fig]}));
+     copy[index].start=start;copy[index].end=start+duration;
+     const err=validate(copy);if(err)return alert('Änderung nicht möglich: '+err);
+     db.plan=copy.sort((a,b)=>a.start-b.start||a.place.localeCompare(b.place));db.planBlocks=[];save();renderPlan();
+    });edit.classList.add('edit');if(db.settings.start)td.append(edit);
+   }else{td.textContent='–';td.className='muted'}tr.append(td);
+  });body.append(tr);
+ });
+ // Gesamtübersicht: alle Figuranten-Einsätze über sämtliche Trainingsblöcke.
+ if(db.plan.length){
+  const counts=new Map();
+  for(const r of db.plan)for(const id of r.fig){
+   const current=counts.get(id)||{dogs:0,minutes:0};
+   current.dogs++;current.minutes+=r.end-r.start;counts.set(id,current);
+  }
+  if(counts.size){
+   summary.append(el('h3','Figuranten – Zusammenfassung über alle Trainingsblöcke'));
+   const table=el('table'),thead=el('thead'),header=el('tr');
+   for(const title of ['Figurant','Hunde betreut','Gesamtdauer'])header.append(el('th',title));
+   thead.append(header);table.append(thead);
+   const tbody=el('tbody');
+   for(const [id,stats] of [...counts.entries()].sort((a,b)=>b[1].dogs-a[1].dogs||name(a[0]).localeCompare(name(b[0]),'de'))){
+    const tr=el('tr'),person=el('td',name(id));
+    if(stats.dogs>6){person.className='fig-over-six';person.title='Mehr als 6 Hunde insgesamt betreut';}
+    tr.append(person,el('td',String(stats.dogs)),el('td',Math.floor(stats.minutes/60)+' h '+String(stats.minutes%60).padStart(2,'0')+' min'));
+    tbody.append(tr);
+   }
+   table.append(tbody);summary.append(table);
+   summary.append(el('p','Die Dauer zählt die tatsächlichen Figuranten-Einsätze; Pausen werden nicht mitgezählt.'));
+  }
+ }
+}
+// Vier Teams auf drei Plätzen: gemeinsame 4-Runden-Rotation statt spätem Einzelstart.
+// Jeder HF setzt genau eine Runde aus; während seiner gesamten Serie bleibt er
+// für Begutachtung und Figurieren gesperrt.
+function compactFourTeamBlock(plan){
+ if(db.places.length!==3)return null;
+ const groups=new Map();for(const r of plan){const k=r.person+'|'+r.dogIndex;if(!groups.has(k))groups.set(k,[]);groups.get(k).push(r)}
+ if(groups.size!==4||[...groups.values()].some(a=>a.length!==3))return null;
+ const dogs=[...groups.values()].map(a=>a.sort((x,y)=>x.start-y.start));
+ if(new Set(dogs.map(a=>a[0].person)).size!==4)return null;
+ const people=db.people.filter(p=>p.inactive!==true),dogIds=new Set(dogs.map(a=>a[0].person));
+ const staff=people.filter(p=>!dogIds.has(p.id));
+ const step=db.settings.duration+db.settings.travel,duration=db.settings.duration,base=db.settings.start?minutes(db.settings.start):0;
+ const places=db.places,need=places.map(p=>Number(p.figCount)||1);
+ const judgeCandidates=places.map(p=>staff.filter(x=>canJudge(x,db.people.find(z=>z.id===dogs[0][0].person))&&judgeMayVisit(x,p.id)).sort((a,b)=>Number(b.judge)-Number(a.judge)||Math.max(...(b.dogs||[]).map((d,i)=>d?levelOf(b,i):-1),-1)-Math.max(...(a.dogs||[]).map((d,i)=>d?levelOf(a,i):-1),-1)));
+ // Enumerate the 4! ways of giving each handler one rest round.
+ const missing=[0,1,2,3],usedMissing=new Set();let answer=null,checks=0;
+ function tryStaff(rows){
+  const assigned=new Map(),occupied=new Set();
+  function placeStaff(site){
+   if(++checks>180000)return false;
+   if(site===3){
+    const candidate=[];
+    for(let round=0;round<4;round++)for(let j=0;j<3;j++){
+     const r=rows[round][j],role=assigned.get(j);
+     candidate.push({...r,start:base+round*step,end:base+round*step+duration,judge:role.judge,fig:[...role.fig]});
+    }
+    if(!validate(candidate)){answer=candidate.sort((a,b)=>a.start-b.start||a.place.localeCompare(b.place));return true}
+    return false;
+   }
+   for(const judge of judgeCandidates[site]){
+    if(occupied.has(judge.id))continue;
+    occupied.add(judge.id);
+    const candidates=staff.filter(p=>figurantAllowedInCurrentBlock(p)&&!occupied.has(p.id)).sort((a,b)=>Number(a.place!==places[site].id)-Number(b.place!==places[site].id)||Number(a.judge)-Number(b.judge));
+    function pick(at,fig){
+     if(fig.length===need[site]){assigned.set(site,{judge:judge.id,fig:fig.map(p=>p.id)});if(placeStaff(site+1))return true;assigned.delete(site);return false}
+     for(let k=at;k<candidates.length;k++){
+      const p=candidates[k];occupied.add(p.id);fig.push(p);
+      if(pick(k+1,fig))return true;
+      fig.pop();occupied.delete(p.id);
+     }
+     return false;
+    }
+    if(pick(0,[]))return true;
+    occupied.delete(judge.id);
+   }
+   return false;
+  }
+  return placeStaff(0);
+ }
+ function assignDog(d,misses,rows){
+  if(answer||checks>180000)return;
+  if(d===4){if(rows.some(row=>row.some(x=>!x)))return;tryStaff(rows);return}
+  const runs=dogs[d];
+  for(let miss=0;miss<4;miss++){
+   if(usedMissing.has(miss))continue;
+   const active=[0,1,2,3].filter(t=>t!==miss);
+   for(let startSite=0;startSite<3;startSite++){
+    if(active.some((round,k)=>rows[round][(startSite+k)%3]))continue;
+    usedMissing.add(miss);
+    for(let k=0;k<3;k++)rows[active[k]][(startSite+k)%3]={...runs[k],place:places[(startSite+k)%3].id};
+    assignDog(d+1,misses,rows);
+    for(let k=0;k<3;k++)rows[active[k]][(startSite+k)%3]=null;
+    usedMissing.delete(miss);
+    if(answer||checks>180000)return;
+   }
+  }
+ }
+ assignDog(0,[],Array.from({length:4},()=>[null,null,null]));
+ return answer;
+}
+// Optional strikt getrennte Ausbildungsblöcke. Bestehende JSON-Daten bleiben kompatibel.
+function configuredBlocks(){return Array.isArray(db.settings.blocks)?db.settings.blocks:[]}
+function renderBlocks(){
+ $('useBlocks').checked=db.settings.useBlocks===true;$('blockSettings').hidden=!$('useBlocks').checked;
+ const list=$('blockList');list.replaceChildren();
+ configuredBlocks().forEach((block,index)=>{
+  const row=el('div');row.className='place-card';row.style.margin='8px 0';
+  const nameLabel=el('label','Block '+(index+1)+' – Bezeichnung');const input=el('input');input.value=block.name||'Block '+(index+1);
+  input.onchange=()=>{block.name=input.value.trim()||'Block '+(index+1);save()};nameLabel.append(input);row.append(nameLabel);
+  const levels=el('div');levels.style.cssText='display:flex;gap:12px;flex-wrap:wrap;margin:10px 0';
+  LEVELS.forEach(level=>{const label=el('label');label.className='role-option';const cb=el('input');cb.type='checkbox';cb.checked=(block.levels||[]).includes(level);cb.onchange=()=>{block.levels=LEVELS.filter(x=>x===level?cb.checked:(block.levels||[]).includes(x));save()};label.append(cb,el('span',level));levels.append(label)});
+  row.append(levels,button('Nach oben',()=>{if(index){[db.settings.blocks[index-1],db.settings.blocks[index]]=[db.settings.blocks[index],db.settings.blocks[index-1]];save();renderBlocks()}}),button('Entfernen',()=>{db.settings.blocks.splice(index,1);save();renderBlocks()}));list.append(row);
+ });
+}
+$('useBlocks').onchange=()=>{db.settings.useBlocks=$('useBlocks').checked;if(db.settings.useBlocks&&!configuredBlocks().length)db.settings.blocks=[{name:'Block 1',levels:[...LEVELS]}];save();renderBlocks()};
+$('addBlock').onclick=()=>{if(!Array.isArray(db.settings.blocks))db.settings.blocks=[];db.settings.blocks.push({name:'Block '+(db.settings.blocks.length+1),levels:[]});save();renderBlocks()};
+// Bei flexiblen Startplätzen zählt die reine Kapazitätsuntergrenze.
+// Zusätzliche Runden können weiterhin durch Personal-/Rollenregeln nötig sein.
+function blockRoundLowerBound(group){
+ const n=db.places.length;
+ return n&&group.length?Math.max(n,group.length):0;
+}
+// Im Blockmodus haben reguläre Begutachter Vorrang vor Ersatzpersonen.
+// Eine bereits als Figurant eingesetzte qualifizierte Person kann mit einem
+// Ersatzbegutachter derselben Runde tauschen. Die gesamte Planung wird nach
+// jedem Tausch erneut geprüft; Hundeläufe und Zeitrunden bleiben unverändert.
+function preferQualifiedJudgesInBlock(plan){
+ const byId=new Map(db.people.map(p=>[p.id,p]));
+ let changed=true;
+ while(changed){
+  changed=false;
+  for(const r of plan){
+   if(byId.get(r.judge)?.judge)continue;
+   const candidates=plan.filter(x=>x.start===r.start).flatMap(x=>x.fig.map(id=>({run:x,id})))
+    .filter(x=>byId.get(x.id)?.judge&&canJudge(byId.get(x.id),byId.get(r.person))&&judgeMayVisit(byId.get(x.id),r.place));
+   for(const {run,id} of candidates){
+    const oldJudge=r.judge,oldFigures=[...run.fig];
+    r.judge=id;
+    run.fig=run.fig.map(fid=>fid===id?oldJudge:fid);
+    if(!validate(plan)){changed=true;break}
+    r.judge=oldJudge;run.fig=oldFigures;
+   }
+   if(changed)break;
+  }
+ }
+ return plan;
+}
+// Sanfter Ausgleich: nur ganze Figuranten-Einsatzserien innerhalb eines Blocks
+// ersetzen. Keine neuen Runden, keine Wechsel innerhalb einer Serie und keine
+// Änderungen an Hundeführern oder Begutachtern.
+function balanceFiguresAcrossBlocks(plan,segments){
+ const persons=db.people.filter(p=>p.inactive!==true);
+ const personById=new Map(persons.map(p=>[p.id,p]));
+ const totals=()=>{const m=new Map(persons.map(p=>[p.id,0]));for(const r of plan)for(const id of r.fig)m.set(id,(m.get(id)||0)+1);return m};
+ const score=m=>{const loads=[...m.values()];return Math.max(...loads)*10000+loads.reduce((sum,n)=>sum+n*n,0)*10};
+ let changes=0;
+ for(let pass=0;pass<12;pass++){
+  const counts=totals();let baseline=score(counts),best=null;
+  for(const seg of segments){
+   const blockRuns=plan.filter(r=>r.start>=seg.start&&r.start<=seg.last);
+   const occupiedElsewhere=new Set(blockRuns.flatMap(r=>[r.person,r.judge]));
+   for(const place of db.places){
+    const siteRuns=blockRuns.filter(r=>r.place===place.id).sort((a,b)=>a.start-b.start);
+    if(!siteRuns.length)continue;
+    const ids=new Set(siteRuns.flatMap(r=>r.fig));
+    for(const oldId of ids){
+     const target=siteRuns.filter(r=>r.fig.includes(oldId));
+     // Only replace a whole uninterrupted stint; no partial substitutions.
+     if(target.length!==siteRuns.length)continue;
+     for(const candidate of persons){
+      if(candidate.id===oldId||candidate.judge||occupiedElsewhere.has(candidate.id))continue;
+      if(blockRuns.some(r=>r.fig.includes(candidate.id)))continue;
+      // A person without a fixed site must not be moved between sites.
+      if(!candidate.place&&plan.some(r=>r.fig.includes(candidate.id)&&r.place!==place.id))continue;
+      const proposed=new Map(counts);
+      proposed.set(oldId,(proposed.get(oldId)||0)-target.length);
+      proposed.set(candidate.id,(proposed.get(candidate.id)||0)+target.length);
+      const newScore=score(proposed);
+      // Retain the preferred home site when a change has little benefit.
+      const penalty=(candidate.place&&candidate.place!==place.id?12:0)+2;
+      if(newScore+penalty>=baseline||(best&&newScore+penalty>=best.score))continue;
+      for(const r of target)r.fig=r.fig.map(id=>id===oldId?candidate.id:id);
+      const valid=!validate(plan);
+      for(const r of target)r.fig=r.fig.map(id=>id===candidate.id?oldId:id);
+      if(valid)best={target,oldId,newId:candidate.id,score:newScore+penalty};
+     }
+    }
+   }
+  }
+  if(!best)break;
+  for(const r of best.target)r.fig=r.fig.map(id=>id===best.oldId?best.newId:id);
+  changes++;
+ }
+ return changes;
+}
+function generateBlocks(){
+ const blocks=configuredBlocks().filter(b=>(b.levels||[]).length);
+ if(!blocks.length)return alert('Bitte mindestens einen Trainingsblock mit Ausbildungsständen definieren.');
+ const used=new Set();for(const b of blocks)for(const l of b.levels){if(used.has(l))return alert('Ausbildungsstand '+l+' ist mehreren Blöcken zugeordnet.');used.add(l)}
+ const active=db.people.flatMap(p=>p.inactive?[]:(p.dogs||[]).flatMap((dog,i)=>dog&&dogEnabled(p,i)?[{p,i,level:dogDetails(p,i).level||'Anfänger'}]:[]));
+ if(active.some(t=>!used.has(t.level)))return alert('Nicht alle aktiven Hundeteams sind einem Trainingsblock zugeordnet.');
+ const original=db.people.map(p=>({p,dogRun:Array.isArray(p.dogRun)?[...p.dogRun]:null}));
+ const previous=db.plan,previousSegments=db.planBlocks;const combined=[];const segments=[];const blockNotes=[];const step=Number($('duration').value)+Number($('travel').value);const start=$('noTime').checked?0:minutes($('start').value||'00:00');let offset=0;
+ try{
+  for(const b of blocks){
+   const group=active.filter(t=>b.levels.includes(t.level));if(!group.length)continue;
+   currentJudgeExcluded=new Set(b.levels);
+   for(const {p} of original){p.dogRun=(p.dogs||[]).map((dog,i)=>!!dog&&group.some(t=>t.p===p&&t.i===i))}
+   generate({throwErrors:true});
+   if(!db.plan.length)throw Error('Kein Plan für '+(b.name||'Block')+' erstellt');
+   if(group.length===4&&db.places.length===3&&new Set(db.plan.map(r=>r.start)).size>4){const compact=compactFourTeamBlock(db.plan);if(compact)db.plan=compact;}
+   preferQualifiedJudgesInBlock(db.plan);
+   const actualRounds=new Set(db.plan.map(r=>r.start)).size;
+   const minRounds=blockRoundLowerBound(group);
+   blockNotes.push((b.name||'Block')+': '+actualRounds+' Runden, mindestens '+minRounds+' nach Team-/Platzkapazität'+(actualRounds===minRounds?' (Untergrenze erreicht)':''));
+   const min=Math.min(...db.plan.map(r=>r.start)),max=Math.max(...db.plan.map(r=>r.start));
+   const segmentStart=start+offset;
+   for(const r of db.plan)combined.push({...r,start:segmentStart+(r.start-min),end:segmentStart+(r.end-min),fig:[...r.fig]});
+   const segmentLast=segmentStart+(max-min);
+   segments.push({number:segments.length+1,name:b.name||'Block '+(segments.length+1),rounds:actualRounds,start:segmentStart,last:segmentLast,pauseStart:segmentLast+step,pauseEnd:segmentLast+2*step});
+   // Eine vollständige zusätzliche Zeitrunde bleibt zwischen zwei Blöcken frei.
+   offset+=(max-min)+2*step;
+   currentJudgeExcluded=null;
+  }
+  for(const {p,dogRun} of original){if(dogRun===null)delete p.dogRun;else p.dogRun=dogRun}
+  const balanceChanges=balanceFiguresAcrossBlocks(combined,segments);
+  db.settings=settings();db.plan=combined;db.planBlocks=segments;
+  const err=validate(combined)||validateCompletePlan(combined,active.map(t=>({person:t.p.id,idx:t.i})));
+  if(err)throw Error('Blockübergreifende Prüfung: '+err);
+  save();renderPlan();$('status').textContent='Plan erstellt: '+blocks.length+' getrennte Trainingsblöcke, '+combined.length+' Suchdurchgänge, '+new Set(combined.map(r=>r.start)).size+' Runden, '+Math.max(0,segments.length-1)+' Blockpausen. '+blockNotes.join(' | ')+'. Figuranten-Ausgleich: '+balanceChanges+' ganze Einsatzserien angepasst. Alle Rollenregeln geprüft.';$('status').className='ok';
+ }catch(e){currentJudgeExcluded=null;for(const {p,dogRun} of original){if(dogRun===null)delete p.dogRun;else p.dogRun=dogRun}db.plan=previous;db.planBlocks=previousSegments;save();renderPlan();$('status').textContent='Blockplanung fehlgeschlagen: '+e.message;$('status').className='warning';alert(e.message)}
+}
+// Offline PDF export: create a real PDF file and ask the browser to download it.
+// The browser/OS decides the final download folder (especially on iOS).
+function downloadPlanPdf(){
+ if(!db.plan.length)return alert('Bitte zuerst einen Trainingsplan erstellen.');
+ const pages=[];let lines=[];
+ const maxLines=54;
+ function add(text='',kind='normal'){
+  if(lines.length>=maxLines){pages.push(lines);lines=[]}
+  lines.push({text:String(text),kind});
+ }
+ const clean=t=>String(t).replace(/[\r\n\t]+/g,' ').replace(/ä/g,'ae').replace(/ö/g,'oe').replace(/ü/g,'ue').replace(/Ä/g,'Ae').replace(/Ö/g,'Oe').replace(/Ü/g,'Ue').replace(/ß/g,'ss').replace(/[–—]/g,'-').replace(/[^\x20-\x7e]/g,'?');
+ const wrap=(text,max=86)=>{const words=clean(text).split(/\s+/);let line='';for(const word of words){if(line&&line.length+word.length+1>max){add(line);line=''}line+=(line?' ':'')+word}if(line)add(line)};
+ add('TRAININGSPLAN', 'title');add('');
+ const times=[...new Set(db.plan.map(r=>r.start))].sort((a,b)=>a-b);
+ const blocks=db.settings.useBlocks&&Array.isArray(db.planBlocks)?db.planBlocks:[];
+ let lastBlock=null;
+ for(const time of times){
+  const block=blocks.find(b=>time>=b.start&&time<=b.last);
+  if(block!==lastBlock){if(lastBlock){add('');add('PAUSE ZWISCHEN DEN TRAININGSBLOECKEN (1 Runde)','heading');add('')}
+   if(block){add('');add('TRAININGSBLOCK '+block.number+' - '+block.name+' ('+block.rounds+' Runden)','heading');add('')}
+   lastBlock=block;
+  }
+  add((db.settings.start?clock(time):'Runde '+(Math.round(time/(db.settings.duration+db.settings.travel))+1)),'heading');
+  for(const place of db.places){
+   const r=db.plan.find(r=>r.start===time&&r.place===place.id);
+   if(!r){add('  '+place.name+': -');continue}
+   add('  '+place.name+': '+name(r.person)+' / '+r.dog);
+   wrap('     Begutachter: '+name(r.judge)+' | Figuranten: '+r.fig.map(name).join(', '),82);
+   const info=dogInfo(r.person,r.dogIndex);
+   if(info)wrap('     Marker: '+(info.marker||'-')+' | Gegenstand: '+(info.object||'-')+' | Fuettern: '+(info.feeding?'Ja':'Nein'),82);
+  }
+  add('');
+ }
+ add('FIGURANTEN - ZUSAMMENFASSUNG','heading');
+ const totals=new Map();for(const r of db.plan)for(const id of r.fig){const x=totals.get(id)||{n:0,min:0};x.n++;x.min+=r.end-r.start;totals.set(id,x)}
+ for(const [id,x] of [...totals].sort((a,b)=>b[1].n-a[1].n))add((x.n>6?'! ':'  ')+name(id)+': '+x.n+' Hunde, '+Math.floor(x.min/60)+' h '+String(x.min%60).padStart(2,'0')+' min');
+ pages.push(lines);
+ const enc=new TextEncoder(),objects=[];
+ function obj(content){objects.push(content);return objects.length}
+ const catalog=obj(''),pagesId=obj(''),font=obj('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>');
+ const pageIds=[];
+ function escapePdf(t){return clean(t).replace(/\\/g,'\\\\').replace(/\(/g,'\\(').replace(/\)/g,'\\)')}
+ for(const page of pages){
+  let stream='';let y=800;
+  for(const line of page){const size=line.kind==='title'?17:line.kind==='heading'?11:9;
+   const color=line.kind==='heading'?'0.55 0.08 0.12 rg':'0.1 0.12 0.15 rg';
+   stream+='BT /F1 '+size+' Tf '+color+' 42 '+y+' Td ('+escapePdf(line.text)+') Tj ET\n';y-=line.kind==='title'?22:line.kind==='heading'?17:13;
+  }
+  const bytes=enc.encode(stream),contentId=obj('<< /Length '+bytes.length+' >>\nstream\n'+stream+'endstream');
+  const pageId=obj('<< /Type /Page /Parent '+pagesId+' 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 '+font+' 0 R >> >> /Contents '+contentId+' 0 R >>');pageIds.push(pageId);
+ }
+ objects[catalog-1]='<< /Type /Catalog /Pages '+pagesId+' 0 R >>';
+ objects[pagesId-1]='<< /Type /Pages /Kids ['+pageIds.map(id=>id+' 0 R').join(' ')+'] /Count '+pageIds.length+' >>';
+ let pdf='%PDF-1.4\n';const offsets=[0];for(let i=0;i<objects.length;i++){offsets.push(enc.encode(pdf).length);pdf+=(i+1)+' 0 obj\n'+objects[i]+'\nendobj\n'}
+ const xref=enc.encode(pdf).length;pdf+='xref\n0 '+(objects.length+1)+'\n0000000000 65535 f \n';for(const n of offsets.slice(1))pdf+=String(n).padStart(10,'0')+' 00000 n \n';
+ pdf+='trailer\n<< /Size '+(objects.length+1)+' /Root '+catalog+' 0 R >>\nstartxref\n'+xref+'\n%%EOF';
+ const blob=new Blob([pdf],{type:'application/pdf'}),url=URL.createObjectURL(blob),a=document.createElement('a');
+ a.href=url;a.download='Trainingsplan.pdf';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);
+}
+$('print').onclick=()=>window.print();$('printLayout').onclick=()=>window.print();$('backup').onclick=()=>{const blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=el('a');a.href=url;a.download='trainingsplaner-sicherung.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),2000)};
+$('restore').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const x=JSON.parse(await f.text());if(!Array.isArray(x.places)||!Array.isArray(x.people)||!Array.isArray(x.plan)||!x.settings)throw Error('Ungültige Sicherung');if(!confirm('Aktuelle Daten durch Sicherung ersetzen?'))return;db=migrateLevels(x);save();render();applySettings();renderBlocks()}catch(err){alert(err.message)}};
+function syncTimeOption(){const disabled=$('noTime').checked;$('timeField').hidden=disabled;$('timeDetails').hidden=disabled;$('start').disabled=disabled}
+$('noTime').onchange=syncTimeOption;
+function applySettings(){for(const k of ['start','duration','travel'])$(k).value=db.settings[k]??'';$('noTime').checked=!db.settings.start;syncTimeOption()}applySettings();render();renderBlocks();
+</script><script>
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./service-worker.js').catch(err => console.warn('Offline-Installation fehlgeschlagen:', err));
+  });
+}
+</script></body></html>
