@@ -64,22 +64,215 @@ body{font:16px system-ui;margin:0;background:#f3f4f6;color:#202124}header{backgr
 /* Sichtbare Trainingsblock-Trennung, auch im PDF-Druck */
 #planTable .block-heading th{background:#fbe8ea!important;color:#851723!important;border-top:3px solid #a51e29;font-size:15px;padding:14px 12px;text-align:left;position:static!important}
 #planTable .block-break th,#planTable .block-break td{background:#fff5e5!important;color:#80500b!important;font-weight:700;border-top:2px dashed #d49a40;border-bottom:2px dashed #d49a40}
-#planTable .block-break td{text-align:center;font-size:14px}
+#planTable .block-break td{text-align:center;font-size:14px}#planTable .block-break{width:100%}#planTable .block-break td{min-width:0!important}#planTable .block-break th{min-width:90px}#planTable .block-break{break-inside:avoid}
 @media print{#planTable .block-heading th{background:#fbe8ea!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}#planTable .block-break th,#planTable .block-break td{background:#fff5e5!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}}
 .figurant-summary{margin-top:20px;break-inside:avoid}.figurant-summary h3{margin:0 0 8px}.figurant-summary table{width:100%;border-collapse:collapse}.figurant-summary th,.figurant-summary td{text-align:left;padding:8px 10px;border-bottom:1px solid #e2e5e9}.figurant-summary th{font-weight:700}.figurant-summary .fig-over-six{color:#dc2626!important;font-weight:800}
 #planTable .fig-over-six{color:#dc2626!important;font-weight:800;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:3px}
 @media print{#planTable .fig-over-six{color:#dc2626!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+.history-table{width:100%;border-collapse:collapse}.history-table td,.history-table th{padding:8px;border-bottom:1px solid #ddd;text-align:left}.history-controls{margin-top:20px}.history-controls button{margin:4px 4px 8px 0}@media print{.history-controls{display:none!important}}</style>
+<style>
+#planTable .block-place-heading th{background:#a51e29!important;color:#fff!important;font-weight:700;text-align:left;padding:10px 12px;position:static!important}
+@media print{#planTable .block-place-heading th{background:#f0f1f3!important;color:#111!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}}
 </style>
-</head><body><header><h1>Trainingsplaner BETA</h1><div>Offline · Trainingsorganisation · gemeinsame Startzeiten</div></header><main>
+<style>.quality-panel{margin:12px 0;padding:12px;border:1px solid #d8dce2;border-radius:8px}.quality-panel h3{margin:0 0 6px}.quality-panel select{max-width:220px;margin:4px}.quality-panel button{margin:4px}@media print{.quality-panel{display:none!important}}</style><style>
+/* Konsistente Schaltflächen und klar getrennte Aktionsbereiche */
+button{min-height:44px;padding:10px 15px;font-size:14px;font-weight:650;line-height:1.3;white-space:normal;transition:background-color .15s ease}
+button:hover{filter:brightness(.95)}button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #c04b56;outline-offset:2px}
+.plan-actions,.print-actions,.history-actions{display:flex;flex-wrap:wrap;align-items:stretch;gap:10px;margin:16px 0 8px}
+.plan-actions button,.print-actions button{flex:1 1 190px;margin:0}
+.plan-actions #generate{flex:2 1 230px;font-size:15px;min-height:48px}
+.history-actions button{flex:1 1 220px;margin:0;min-height:46px}
+.history-actions #resetHistory{background:#f1f3f5;color:#374151;border:1px solid #d2d7de}
+.backup-import{display:block;max-width:450px;margin:12px 0 4px;font-size:13px;color:#4b5563}
+.backup-import input{font-size:13px;padding:8px;margin-top:5px}
+#status{margin:12px 0 16px;padding:11px 14px;border-radius:8px;background:#f3f4f6;font-weight:650;font-size:14px}
+#status.ok{background:#edf8ef;color:#176534}#status.warning{background:#fff1f1;color:#9b1c1c}
+.card{padding:clamp(14px,2.5vw,24px);margin:16px 0}
+.card h2{margin:0 0 16px;font-size:19px}
+@media(max-width:540px){.plan-actions,.print-actions,.history-actions{flex-direction:column;gap:8px}.plan-actions button,.print-actions button,.history-actions button{flex:auto;width:100%}.place-actions button{min-height:44px}.card{margin:12px 0}}
+@media print{.plan-actions,.print-actions,.history-actions,.backup-import{display:none!important}}
+</style><style>
+/* BETA v19: compact responsive editing UI; schedule/print styles unchanged */
+:root{--line:#e0e4e9;--red:#a51e29;--muted:#596575}
+main{max-width:1080px;padding:12px 18px 36px}
+.card{padding:20px 24px;margin:14px 0;border:1px solid #e6e8ec;box-shadow:0 2px 10px #11182709}
+.card h2{font-size:18px;margin-bottom:14px}
+button{min-height:38px;padding:8px 13px;font-size:13px;border-radius:7px;margin:3px 0}
+input,select{min-height:38px;padding:8px 10px;margin:4px 0;font-size:14px}
+#placeName{width:min(100%,430px);margin-right:10px}
+#addPlace{vertical-align:middle}
+#places{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,360px),1fr));gap:10px;margin-top:12px}
+.place-card{margin:0!important;padding:12px 14px;border:1px solid var(--line);border-left:4px solid var(--red);border-radius:9px;box-shadow:none}
+.place-heading{padding:0 0 8px;margin:0 0 8px;gap:9px;border-bottom:1px solid var(--line)}
+.place-heading strong{font-size:15px}
+.place-number,.person-number{height:27px;min-width:27px;border-radius:6px;font-size:13px}
+.place-controls{display:flex;gap:8px;align-items:end;flex-wrap:nowrap;margin:0}
+.place-controls>label{flex:1 1 auto;min-width:0;font-size:12px}
+.place-controls select{min-height:36px;margin-top:3px}
+.place-actions{gap:5px}
+.place-actions button{min-height:36px;padding:7px 9px;font-size:12px}
+.person-entry{padding:14px;margin:8px 0 16px;box-shadow:none;border:1px solid var(--line);border-left:4px solid var(--red)}
+.person-entry-title{font-size:15px;margin-bottom:10px;padding-bottom:8px}
+.person-entry-grid{gap:9px 12px}
+.person-entry input,.person-entry select{min-height:38px;font-size:14px}
+.person-entry #addPerson{min-height:38px;margin-top:10px;padding:8px 14px}
+.person-place-checks{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}
+.person-place-checks .role-option{display:inline-flex;flex:0 0 auto;margin:0;padding:7px 10px;min-height:36px}
+.person-place-checks .role-option input{height:17px;width:17px}
+.person-list-heading{margin:18px 0 8px}
+#people{display:grid;gap:9px}
+.person-card{margin:0;padding:0;border:1px solid var(--line);border-left:4px solid var(--red);border-radius:9px;box-shadow:none;overflow:hidden}
+.person-heading{cursor:pointer;display:flex;align-items:center;gap:10px;margin:0;padding:11px 13px;border:0;list-style:none}
+.person-heading::-webkit-details-marker{display:none}
+.person-heading strong{font-size:15px;flex:1;min-width:0}
+.person-heading>span:last-child{font-size:12px;color:var(--muted);font-weight:600}
+.person-heading::after{content:'▾';font-size:15px;color:var(--muted)}
+.person-card[open] .person-heading{border-bottom:1px solid var(--line);margin-bottom:12px}
+.person-card[open] .person-heading::after{content:'▴'}
+.person-card>.role-options,.person-card>div:not(.person-heading),.person-card>button{margin-left:14px;margin-right:14px}
+.person-card>button{margin-bottom:14px}
+.person-card>.role-options{margin-top:0;margin-bottom:10px}
+.role-options{grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:7px}
+.role-option{min-height:36px;padding:7px 10px;gap:7px;font-size:13px;border-radius:7px}
+.role-option input{height:17px;width:17px}
+.person-card>div:has(>.person-place-checks){margin-bottom:10px}
+.person-card>div:has(>.person-place-checks)>strong{font-size:13px}
+.person-card [data-dog-field]{padding:10px 12px!important;margin-top:7px!important;margin-bottom:8px!important;border-radius:8px}
+.person-card [data-dog-field] input,.person-card [data-dog-field] select{min-height:36px}
+.block-card{padding:12px 14px;margin:8px 0!important}
+.block-card>label{font-size:13px;margin:0}
+.block-card>label input{max-width:400px;display:block}
+.block-options{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:9px 0}
+.block-options strong{width:100%;font-size:13px}
+.block-options .role-option{margin:0}
+.block-card>button{margin-right:6px}
+#timeDetails{display:grid;grid-template-columns:repeat(2,minmax(0,190px));gap:10px}
+#timeField{max-width:230px}
+#timeDetails label{font-size:13px}
+.plan-actions{margin:14px 0 6px}
+.plan-actions button{min-height:42px;flex:0 1 auto!important}
+.plan-actions #generate{min-height:42px;font-size:14px}
+.backup-import{max-width:390px}
+#placeOverview .place-card{margin:8px 0!important}
+@media(max-width:700px){main{padding:8px}.card{padding:13px;margin:10px 0}#places{grid-template-columns:1fr}.place-controls{flex-wrap:wrap}.place-controls>label{flex-basis:100%}.place-actions{width:100%}.person-entry-grid{grid-template-columns:1fr}.person-entry .person-entry-wide{grid-column:auto}.person-heading>span:last-child{display:none}.plan-actions{flex-direction:column}.plan-actions button{width:100%}#timeDetails{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media print{.person-card,.place-card{box-shadow:none}}
+</style>
+<style>
+/* BETA v20: Die Seite bleibt auf der tatsächlichen Displaybreite.
+   Nur die Trainingsplantabelle darf horizontal scrollen. */
+html{width:100%;max-width:100%;overflow-x:clip}
+body{width:100%;max-width:100%;overflow-x:clip}
+header{box-sizing:border-box;width:100%;max-width:100%}
+main{box-sizing:border-box;width:100%;max-width:1080px;min-width:0}
+main>.card{box-sizing:border-box;width:100%;max-width:100%;min-width:0}
+.card,.person-entry,.block-editor,.block-card,#places,#people,#placeOverview{min-width:0;max-width:100%}
+.scroll{display:block;width:100%;max-width:100%;min-width:0;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}
+#planTable{width:max-content;min-width:100%;max-width:none}
+#planTable td{min-width:180px}
+input,select,textarea{min-width:0}
+@media(max-width:700px){
+ main{width:100%;max-width:100%;padding:8px}
+ .card{width:100%;max-width:100%;min-width:0}
+ .plan-actions button{box-sizing:border-box;max-width:100%}
+}
+@media print{html,body{overflow:visible!important}#planTable{width:100%;max-width:none}.scroll{overflow:visible!important}}
+</style>
+<style>
+/* BETA v21: kompakte Eingabe und klare Trainingsblock-Gruppen */
+.person-entry{padding:12px 14px;margin-bottom:12px}
+.person-entry-title{margin-bottom:9px}
+.person-entry-grid{gap:8px 12px}
+.person-entry-grid label{line-height:1.3}
+.person-entry-grid input{margin-top:4px}
+.person-entry-grid .person-entry-wide>strong{display:block;font-size:13px;margin:3px 0 6px}
+.person-place-checks{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+.person-place-checks .role-option{display:flex;min-width:0;min-height:42px;padding:8px 10px;margin:0;white-space:normal}
+.person-entry #addPerson{margin-top:12px;width:auto}
+.block-editor{min-width:0}
+.block-card{padding:12px!important;margin:10px 0!important}
+.block-card>label{display:block;font-weight:650}
+.block-card>label input{max-width:none;width:100%;margin-top:5px}
+.block-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin:10px 0 13px}
+.block-options strong{grid-column:1/-1;display:block;font-size:13px;margin:0 0 1px}
+.block-options .role-option{display:flex;align-items:center;min-width:0;min-height:43px;padding:9px 10px;overflow-wrap:anywhere;white-space:normal;line-height:1.25}
+.block-options .role-option input{flex:0 0 18px;width:18px;height:18px}
+.block-sites{padding-bottom:12px;border-bottom:1px solid #e4e8ee}
+.block-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.block-actions button{margin:0;min-height:40px}
+.block-actions button:last-child{background:#f5f6f8;color:#a51e29;border:1px solid #e5b4bb}
+#blockSettings>p.muted{margin:9px 0;font-size:12px;line-height:1.45}
+#blockSettings>p.muted:first-of-type{max-width:65ch}
+#addBlock{width:100%;margin:8px 0 3px}
+.plan-actions{gap:8px;margin-top:14px}
+.plan-actions button{width:100%;min-height:46px}
+.backup-import{margin-top:10px}
+@media(min-width:650px){.person-place-checks{grid-template-columns:repeat(4,minmax(0,1fr))}.block-options{grid-template-columns:repeat(3,minmax(0,1fr))}.block-sites{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media(max-width:370px){.person-place-checks,.block-options{grid-template-columns:repeat(2,minmax(0,1fr))}.block-options .role-option{font-size:12px;padding:8px 6px;gap:5px}}
+@media print{.block-actions{display:none}}
+</style>
+<style>
+/* BETA v22: dichte, weiterhin gut bedienbare mobile Auswahl */
+@media screen {
+ .person-entry{padding:10px 12px;margin:7px 0 10px}
+ .person-entry-title{padding-bottom:6px;margin-bottom:7px}
+ .person-entry-grid{gap:6px 10px}
+ .person-entry-grid label{font-size:12px}
+ .person-entry-grid input{min-height:35px;padding:6px 9px;margin-top:3px}
+ .person-entry-grid .person-entry-wide>strong{margin:3px 0 5px}
+ .person-place-checks{gap:5px}
+ .person-place-checks .role-option,
+ .block-options .role-option{box-sizing:border-box;min-height:36px;height:auto;padding:6px 8px;gap:6px;font-size:12px;font-weight:550;line-height:1.15}
+ .person-place-checks .role-option input,
+ .block-options .role-option input{width:16px;height:16px;flex:0 0 16px}
+ .block-card{padding:10px 12px!important;margin:7px 0!important}
+ .block-card>label{font-size:12px}
+ .block-card>label input{min-height:36px;margin-top:3px}
+ .block-options{gap:5px;margin:7px 0 9px}
+ .block-options strong{font-size:12px;margin:0}
+ .block-sites{padding-bottom:9px}
+ .block-actions{margin-top:8px;gap:6px}
+ .block-actions button{min-height:35px;padding:6px 10px;font-size:12px}
+ #addBlock{min-height:36px;margin:6px 0}
+}
+@media screen and (max-width:600px){
+ .person-place-checks,.block-options{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .person-place-checks .role-option,.block-options .role-option{min-height:36px;padding:6px 7px}
+}
+</style>
+<style>
+/* v23: Checkboxen dürfen keine allgemeinen Textfeld-Abstände erben. */
+@media screen {
+ .person-place-checks,.block-options{align-items:start;grid-auto-rows:min-content;row-gap:4px;column-gap:5px}
+ .person-entry-grid .person-place-checks input[type="checkbox"],
+ .person-place-checks input[type="checkbox"],
+ .block-options input[type="checkbox"]{
+   box-sizing:border-box!important;appearance:auto!important;
+   width:16px!important;height:16px!important;min-width:16px!important;min-height:16px!important;
+   max-width:16px!important;max-height:16px!important;
+   padding:0!important;margin:0!important;flex:0 0 16px!important;
+ }
+ .person-place-checks label.role-option,.block-options label.role-option{
+   box-sizing:border-box!important;display:flex!important;align-items:center!important;
+   align-self:start!important;min-height:30px!important;height:auto!important;
+   padding:4px 6px!important;margin:0!important;gap:6px!important;
+   font-size:12px!important;line-height:1.15!important;
+ }
+ .block-sites{padding-bottom:7px!important}
+ .block-options{margin:5px 0 7px!important}
+ .block-options strong{margin:0!important;padding:0!important}
+ .block-card{padding:8px 10px!important;margin:5px 0!important}
+ .person-entry-grid .person-place-checks{margin:4px 0!important}
+}
+</style><style>.app-copyright{text-align:center;color:#6b7280;font-size:12px;padding:12px 16px 24px}@media print{.app-copyright{display:none!important}}</style></head><body><header><h1>Trainingsplaner</h1><div>Rettungshundetraining einfach planen</div></header><main>
 <section class="card edit"><h2>1. Schadenplätze</h2><input id="placeName" placeholder="Schadenplatzname"><button id="addPlace">Schadenplatz hinzufügen</button><div id="places"></div></section>
-<section class="card edit"><h2>2. Personen und Hunde</h2><div class="person-entry"><div class="person-entry-title">Neue Person erfassen</div><div class="person-entry-grid"><label class="person-entry-wide">Name der Person<input id="personName" placeholder="Name eingeben"></label><label>Hund 1 (optional)<input id="dog1" placeholder="Name des ersten Hundes"></label><label>Hund 2 (optional)<input id="dog2" placeholder="Name des zweiten Hundes"></label><label class="person-entry-wide">Eigener Schadenplatz (optional)<select id="personPlace"></select></label></div><button id="addPerson" class="secondary">Person hinzufügen</button></div><div class="person-list-heading">Erfasste Personen und Hunde</div><div id="people"></div><button id="saveAllPeople">Alle Personen und Hunde speichern</button><p class="muted">Mit «Mit [Hundename] laufen» kannst du jeden Hund einzeln für diesen Trainingsplan aktivieren oder deaktivieren, ohne ihre Angaben zu löschen. Mit «Nicht einsetzen» wird die Person vollständig aus der Planung ausgeschlossen, ohne ihre Daten zu löschen. Alle Änderungen werden gemeinsam gespeichert.</p></section>
+<section class="card edit"><h2>2. Personen und Hunde</h2><div class="person-entry"><div class="person-entry-title">Neue Person erfassen</div><div class="person-entry-grid"><label class="person-entry-wide">Name der Person<input id="personName" placeholder="Name eingeben"></label><label>Hund 1 (optional)<input id="dog1" placeholder="Name des ersten Hundes"></label><label>Hund 2 (optional)<input id="dog2" placeholder="Name des zweiten Hundes"></label><div class="person-entry-wide"><strong>Schadenplätze (Mehrfachauswahl möglich)</strong><div id="personPlace"></div></div></div><button id="addPerson" class="secondary">Person hinzufügen</button></div><div class="person-list-heading">Erfasste Personen und Hunde</div><div id="people"></div><button id="saveAllPeople">Alle Personen und Hunde speichern</button><p class="muted">Mit «Mit [Hundename] laufen» kannst du jeden Hund einzeln für diesen Trainingsplan aktivieren oder deaktivieren, ohne ihre Angaben zu löschen. Mit «Nicht einsetzen» wird die Person vollständig aus der Planung ausgeschlossen, ohne ihre Daten zu löschen. Alle Änderungen werden gemeinsam gespeichert.</p></section>
 <section class="card" id="placeOverviewSection"><h2>3. Schadenplatzübersicht</h2><p class="muted">Die Begutachterrolle wird direkt bei den Personen unter Punkt 2 festgelegt.</p><div id="placeOverview"></div></section>
-<section class="card edit"><h2>4. Trainingsparameter</h2><div class="time-option"><label class="role-option"><input id="noTime" type="checkbox"> Ohne Uhrzeit planen</label></div><div id="timeField" class="time-field"><label>Trainingsbeginn<input id="start" type="time"></label></div><p class="muted">Ohne Uhrzeit wird der Plan als Runde 1, Runde 2 usw. angezeigt.</p><div id="timeDetails" class="time-field"><label>Dauer pro Durchgang (Minuten)<input id="duration" type="number" min="1" value="20"></label><label>Wechselzeit (Minuten)<input id="travel" type="number" min="0" value="5"></label></div><p class="muted">Optimiert die gesamte Planung auf möglichst wenige Zeitrunden und Wartezeiten. Figuranten bleiben möglichst für mehrere Hunde am Stück (keine Einzeleinsätze, wenn vermeidbar); maximal 6 Durchgänge hintereinander, danach mindestens 1 Runde Pause. Hunde werden möglichst nach Niveau eingeteilt: Anfänger → Mittlere Anfänger → Mittlere Fortgeschritten → Fortgeschritten → Einsatzfähig. Hundeführer ohne festen Schadenplatz werden für den Plan passend einem Startplatz zugeteilt. Jeder Hund startet am eigenen beziehungsweise zugeteilten Schadenplatz und besucht die weiteren Plätze in fester Reihenfolge (1 → 2 → 3 → 1).</p><div class="block-editor"><label class="role-option"><input id="useBlocks" type="checkbox"> Trainingsblöcke strikt nacheinander planen</label><div id="blockSettings" hidden><p class="muted">Pro Block Ausbildungsstände wählen. Ein Ausbildungsstand darf nur in einem Block vorkommen. Alle aktiven Hundeteams müssen zugeordnet sein.</p><div id="blockList"></div><button type="button" class="secondary" id="addBlock">Trainingsblock hinzufügen</button></div></div><button id="generate">Trainingsplan erstellen</button> <button class="secondary" id="backup">Datensicherung exportieren</button><label>Datensicherung importieren<input type="file" id="restore" accept="application/json,.json"></label></section>
-<section class="card"><h2>5. Trainingsplan</h2><div id="status" class="muted">Noch kein Plan erstellt.</div><div class="scroll"><table id="planTable"><thead id="scheduleHead"></thead><tbody id="schedule"></tbody></table></div><p class="muted">Eine Startzeit oder Runde pro Zeile, Schadenplätze in Spalten.</p><div id="figurantSummary" class="figurant-summary" aria-live="polite"></div><button class="edit secondary" id="fillablePdf" type="button">Drucken Begutachter</button> <button class="edit secondary" id="print">Drucken Hundeführer</button></section>
-</main><script>
+<section class="card edit"><h2>4. Trainingsparameter</h2><div class="time-option"><label class="role-option"><input id="noTime" type="checkbox"> Ohne Uhrzeit planen</label></div><div id="timeField" class="time-field"><label>Trainingsbeginn<input id="start" type="time"></label></div><p class="muted">Ohne Uhrzeit wird der Plan als Runde 1, Runde 2 usw. angezeigt.</p><div id="timeDetails" class="time-field"><label>Dauer pro Durchgang (Minuten)<input id="duration" type="number" min="1" value="20"></label><label>Wechselzeit (Minuten)<input id="travel" type="number" min="0" value="5"></label></div><p class="muted">Die Planung berücksichtigt Ausbildungsstände, Schadenplätze und Rollenregeln.</p><div class="block-editor"><label class="role-option"><input id="useBlocks" type="checkbox"> Trainingsblöcke strikt nacheinander planen</label><div id="blockSettings" hidden><p class="muted">Pro Block Ausbildungsstände wählen. Ein Ausbildungsstand darf nur in einem Block vorkommen. Alle aktiven Hundeteams müssen zugeordnet sein.</p><div id="blockList"></div><button type="button" class="secondary" id="addBlock">Trainingsblock hinzufügen</button></div></div><div class="plan-actions"><button id="generate">Trainingsplan erstellen</button><button class="secondary" id="backup">Datensicherung exportieren</button></div><label class="backup-import">Datensicherung importieren<input type="file" id="restore" accept="application/json,.json"></label></section>
+<section class="card"><h2>5. Trainingsplan</h2><div id="status" class="muted">Noch kein Plan erstellt.</div><div class="scroll"><table id="planTable"><thead id="scheduleHead"></thead><tbody id="schedule"></tbody></table></div><p class="muted">Eine Startzeit oder Runde pro Zeile, Schadenplätze in Spalten.</p><div class="edit"><button type="button" class="secondary" id="runTests">Automatische Tests ausführen</button><span id="testResults"></span></div><div id="figurantSummary" class="figurant-summary" aria-live="polite"></div><div class="history-controls edit"><div class="history-actions"><button type="button" id="confirmTraining">Training durchgeführt – Einsätze übernehmen</button> <button type="button" class="secondary" id="resetHistory">Figurantenstatistik zurücksetzen</button></div><div id="figureHistory" aria-live="polite"></div></div><div class="print-actions edit"><button class="secondary" id="fillablePdf" type="button">Drucken Begutachter</button><button class="secondary" id="print" type="button">Drucken Hundeführer</button></div></section>
+</main><footer class="app-copyright">© 2026 Red. Alle Rechte vorbehalten.</footer><script>
 'use strict';
 const KEY='redog_v4', $=id=>document.getElementById(id);
-const LEVELS=['Anfänger','Mittlere Anfänger','Mittlere Fortgeschritten','Fortgeschritten','Einsatzfähig'];
+const LEVELS=['Junioren','Anfänger','Mittlere Anfänger','Mittlere Fortgeschritten','Fortgeschritten','Einsatzfähig'];
 const normalizeLevel=level=>level==='Mittlere'?'Mittlere Anfänger':level;
 const dogEnabled=(person,index)=>person.withDog!==false && (!person.dogRun || person.dogRun[index]!==false);
 const activeDogs=person=>(person.dogs||[]).filter((dog,index)=>dog&&dogEnabled(person,index));
@@ -88,7 +281,98 @@ const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,8);
 const empty=()=>({places:[],people:[],settings:{start:'',duration:20,travel:5,figCount:1},plan:[]});
 function load(){try{const x=localStorage.getItem(KEY);if(x)return JSON.parse(x);const v=JSON.parse(localStorage.getItem('redog_v3')||'null');if(v)return {places:(v.plaetze||[]).map(p=>({id:p.id,name:p.name})),people:(v.personen||[]).map(p=>({id:p.id,name:p.name,place:p.platz,dogs:p.hunde||[],judge:(v.plaetze||[]).some(q=>q.id===p.platz&&q.begutachter===p.id)})),settings:{start:'',duration:20,travel:5,figCount:v.figuranten||1},plan:[]}}catch(e){alert('Gespeicherte Daten konnten nicht geladen werden.')}return empty()}
 function migrateLevels(data){for(const p of data.people||[])for(const detail of Object.values(p.dogDetails||{}))if(detail&&detail.level==='Mittlere')detail.level='Mittlere Anfänger';for(const block of data.settings?.blocks||[])if(Array.isArray(block.levels)&&block.levels.includes('Mittlere'))block.levels=[...new Set(block.levels.flatMap(l=>l==='Mittlere'?['Mittlere Anfänger','Mittlere Fortgeschritten']:[l]))];return data}
-let db=migrateLevels(load());db.places.forEach(p=>{if(![1,2,3,4,5].includes(Number(p.figCount)))p.figCount=Number(db.settings?.figCount)||1});function save(){localStorage.setItem(KEY,JSON.stringify(db))}
+let db=migrateLevels(load());db.figureHistory=db.figureHistory||{totals:{},completed:[]};db.places.forEach(p=>{if(![1,2,3,4,5].includes(Number(p.figCount)))p.figCount=Number(db.settings?.figCount)||1});function save(){localStorage.setItem(KEY,JSON.stringify(db))}
+function personPlaces(person){
+ if(!person)return [];
+ return Array.isArray(person.places)?person.places.filter(id=>db.places.some(p=>p.id===id)):(person.place?[person.place]:[]);
+}
+function personAtPlace(person,id){return personPlaces(person).includes(id)}
+function juniorOnlyBlock(){return db.settings.useBlocks===true&&currentJudgeExcluded instanceof Set&&currentJudgeExcluded.size===1&&currentJudgeExcluded.has('Junioren')}
+
+function placeCheckboxes(selected,changed){
+ const wrap=el('div');wrap.className='person-place-checks';
+ for(const place of db.places){
+  const label=el('label');label.className='role-option';
+  const cb=el('input');cb.type='checkbox';cb.value=place.id;cb.checked=selected.includes(place.id);
+  cb.onchange=()=>changed?.();label.append(cb,el('span',place.name));wrap.append(label);
+ }
+ return wrap;
+}
+function selectedPlaces(wrap){return [...wrap.querySelectorAll('input:checked')].map(x=>x.value)}
+function isPureJuniorSegment(segment){
+ const block=(db.settings?.blocks||[]).find(b=>b.name===segment.name);
+ return !!block&&Array.isArray(block.levels)&&block.levels.length===1&&block.levels[0]==='Junioren';
+}
+function isPureJuniorRun(r){
+ return db.settings?.useBlocks===true&&(db.planBlocks||[]).some(seg=>isPureJuniorSegment(seg)&&r.start>=seg.start&&r.start<=seg.last);
+}
+function countedFigurantRuns(){return (db.plan||[]).filter(r=>!isPureJuniorRun(r))}
+function preferJuniorSiteStaff(plan,segments){
+ let changes=0;
+ for(const seg of segments.filter(isPureJuniorSegment)){
+   const blockRuns=plan.filter(r=>r.start>=seg.start&&r.start<=seg.last);
+  for(const place of db.places){
+   const site=blockRuns.filter(r=>r.place===place.id);
+   if(!site.length)continue;
+   const current=new Set(site.flatMap(r=>r.fig));
+   const preferred=db.people.filter(p=>!p.inactive&&personAtPlace(p,place.id)&&!current.has(p.id));
+   for(const person of preferred){
+    // Nur komplette Figurantenserien ersetzen, nicht einzelne Suchdurchgänge.
+    const oldIds=site[0].fig.filter(id=>site.every(r=>r.fig.includes(id))&&!personAtPlace(db.people.find(p=>p.id===id),place.id));
+    if(!oldIds.length)break;
+    for(const oldId of oldIds){
+     for(const r of site)r.fig=r.fig.map(id=>id===oldId?person.id:id);
+     const valid=!validate(plan);
+     if(valid){changes++;current.add(person.id);break}
+     for(const r of site)r.fig=r.fig.map(id=>id===person.id?oldId:id);
+    }
+   }
+  }
+ }
+ return changes;
+}
+function pastFigureCount(id){return Number(db.figureHistory?.totals?.[id]||0)}
+function historyPlanKey(){
+ // A stable plan signature: regenerating the same schedule cannot count twice.
+ return JSON.stringify(db.plan.map(r=>[r.start,r.place,r.person,r.dogIndex,r.judge,[...r.fig].sort()]).sort((a,b)=>a[0]-b[0]||String(a[1]).localeCompare(String(b[1]))));
+}
+function figureLoadScore(m){
+ const ids=db.people.filter(p=>p.inactive!==true).map(p=>p.id);
+ const loads=ids.map(id=>(m.get(id)||0)+pastFigureCount(id));
+ return (loads.length?Math.max(...loads):0)*10000+loads.reduce((a,n)=>a+n*n,0)*10;
+}
+function renderFigureHistory(){
+ const node=$('figureHistory');if(!node)return;node.replaceChildren();
+ const history=db.figureHistory||{totals:{},completed:[]};
+ const h=el('h3','Figurantenstatistik – bestätigte Trainings');node.append(h);
+ node.append(el('p','Bestätigte Trainings: '+history.completed.length+'. Reine Juniorenblöcke und Testplanungen werden nicht gezählt.'));
+ const table=el('table');table.className='history-table';
+ const head=el('tr');['Figurant','Bisherige Hunde','Aktueller Plan','Summe nach Bestätigung'].forEach(x=>head.append(el('th',x)));table.append(head);
+ const now=new Map();for(const r of countedFigurantRuns())for(const id of r.fig)now.set(id,(now.get(id)||0)+1);
+ for(const p of db.people){
+  const old=pastFigureCount(p.id),current=now.get(p.id)||0;
+  if(!old&&!current)continue;
+  const tr=el('tr');[p.name,String(old),String(current),String(old+current)].forEach(x=>tr.append(el('td',x)));table.append(tr);
+ }
+ node.append(table);
+ const key=historyPlanKey();
+ $('confirmTraining').disabled=!db.plan.length||history.completed.some(c=>c.key===key);
+}
+$('confirmTraining').onclick=()=>{
+ if(!db.plan.length)return alert('Bitte zuerst einen Trainingsplan erstellen.');
+ const key=historyPlanKey(),history=db.figureHistory;
+ if(history.completed.some(c=>c.key===key))return alert('Dieser Plan wurde bereits bestätigt.');
+ if(!confirm('Training tatsächlich durchgeführt? Figuranten-Einsätze dauerhaft zur Statistik hinzufügen?'))return;
+ const counts={};for(const r of countedFigurantRuns())for(const id of r.fig)counts[id]=(counts[id]||0)+1;
+ for(const [id,n] of Object.entries(counts))history.totals[id]=(history.totals[id]||0)+n;
+ history.completed.push({key,date:new Date().toISOString(),counts});
+ save();renderFigureHistory();
+ alert('Einsätze übernommen. Sie werden bei der nächsten Planung berücksichtigt.');
+};
+$('resetHistory').onclick=()=>{
+ if(!confirm('Alle bisher bestätigten Figuranten-Einsätze unwiderruflich zurücksetzen?'))return;
+ db.figureHistory={totals:{},completed:[]};save();renderFigureHistory();
+};
 function el(tag,txt){const e=document.createElement(tag);if(txt!==undefined)e.textContent=txt;return e}
 function opt(select,items){const old=select.value;select.replaceChildren();items.forEach(p=>{const o=el('option',p.name);o.value=p.id;select.append(o)});if(items.some(p=>p.id===old))select.value=old}
 function button(label,fn){const b=el('button',label);b.className='small secondary';b.onclick=fn;return b}
@@ -139,15 +423,15 @@ function render(){
    p.name=name;db.plan=[];save();render();
   }));
   placeActions.append(button('Löschen',()=>{
-   if(db.people.some(x=>x.place===p.id))return alert('Zuerst Personen einem anderen Schadenplatz zuweisen.');
+   if(db.people.some(x=>personAtPlace(x,p.id)))return alert('Zuerst Personen von diesem Schadenplatz abwählen.');
    db.places=db.places.filter(x=>x.id!==p.id);db.plan=[];save();render();
   }));places.append(d);
  });
  db.people.forEach((p,personIndex)=>{
-  const d=el('div');d.className='person-card';
-  const heading=el('div');heading.className='person-heading';
+  const d=el('details');d.className='person-card';
+  const heading=el('summary');heading.className='person-heading';
   const number=el('span',String(personIndex+1));number.className='person-number';
-  heading.append(number,el('strong',p.name+' · '+((p.dogs||[]).join(', ')||'ohne Hund')));
+  heading.append(number,el('strong',p.name+' · '+((p.dogs||[]).join(', ')||'ohne Hund')),el('span','Bearbeiten'));
   d.append(heading);d.dataset.personId=p.id;
   const roles=el('div');roles.className='role-options';
   const dogChecks=(p.dogs||[]).map((dog,i)=>{const label=el('label'),check=el('input');check.type='checkbox';check.checked=dogEnabled(p,i);label.className='role-option';label.append(check,el('span','Mit '+dog+' laufen'));return {label,check}});
@@ -158,12 +442,9 @@ function render(){
   const syncRoles=()=>{dogChecks.forEach(({label,check})=>{check.disabled=inactiveCheck.checked;label.style.opacity=inactiveCheck.checked?'.45':'1'});judgeCheck.disabled=inactiveCheck.checked;judgeLabel.style.opacity=inactiveCheck.checked?'.45':'1'};
   inactiveCheck.onchange=syncRoles;syncRoles();
   dogChecks.forEach(({label})=>roles.append(label));roles.append(judgeLabel,inactiveLabel);d.append(roles);
-  const label=el('label','Schadenplatz ändern');
-  const select=el('select');
-  opt(select,[{id:'',name:'Kein fester Schadenplatz (automatisch)'},...db.places]);select.value=p.place||'';
-  label.append(select);d.append(label);
-  select.onchange=()=>{if(select.value!==p.place&&p.place)judgeCheck.checked=false;};
-  d.readChanges=()=>{p.place=select.value;p.judge=judgeCheck.checked;p.withDog=true;p.dogRun=dogChecks.map(({check})=>check.checked);p.inactive=inactiveCheck.checked;for(const field of d.querySelectorAll('[data-dog-field]'))field.readChanges()};
+  const label=el('div');label.append(el('strong','Schadenplätze zuweisen (mehrere möglich)'));
+  const checkboxes=placeCheckboxes(personPlaces(p));label.append(checkboxes);d.append(label);
+  d.readChanges=()=>{const chosen=selectedPlaces(checkboxes);p.places=chosen;p.place=chosen[0]||'';p.judge=judgeCheck.checked;p.withDog=true;p.dogRun=dogChecks.map(({check})=>check.checked);p.inactive=inactiveCheck.checked;for(const field of d.querySelectorAll('[data-dog-field]'))field.readChanges()};
 
   (p.dogs||[]).forEach((dog,i)=>{const field=dogFields(p,i);field.dataset.dogField='1';d.append(field)});
   d.append(button('Löschen',()=>{
@@ -171,7 +452,7 @@ function render(){
    readPersonChanges();db.people=db.people.filter(x=>x.id!==p.id);db.plan=[];render();
   }));people.append(d);
  });
- opt($('personPlace'),[{id:'',name:'Kein fester Schadenplatz (automatisch)'},...db.places]);
+ const newPlace=$('personPlace');newPlace.replaceChildren();newPlace.append(placeCheckboxes([]));
  renderOverview();renderPlan();
 }
 function renderOverview(){
@@ -195,14 +476,14 @@ function renderOverview(){
    line.append(info,tag);section.append(line);
   });target.append(section);
  };
- db.places.forEach((place,i)=>makeSection(place.name,String(i+1),db.people.filter(person=>person.place===place.id)));
- const free=db.people.filter(person=>!person.place);
+ db.places.forEach((place,i)=>makeSection(place.name,String(i+1),db.people.filter(person=>personAtPlace(person,place.id))));
+ const free=db.people.filter(person=>!personPlaces(person).length);
  if(free.length)makeSection('Ohne festen Schadenplatz','–',free);
 }
 $('addPlace').onclick=()=>{const name=$('placeName').value.trim();if(!name)return alert('Namen eingeben');if(db.places.some(p=>p.name.toLowerCase()===name.toLowerCase()))return alert('Name bereits vorhanden');db.places.push({id:uid(),name,figCount:1});$('placeName').value='';db.plan=[];save();render()};
 function readPersonChanges(){document.querySelectorAll('#people [data-person-id]').forEach(node=>node.readChanges?.())}
 $('saveAllPeople').onclick=()=>{readPersonChanges();db.plan=[];save();render();alert('Alle Personen- und Hundeangaben gespeichert. Trainingsplan bei Bedarf neu erstellen.')};
-$('addPerson').onclick=()=>{readPersonChanges();const name=$('personName').value.trim(),place=$('personPlace').value,dogs=[$('dog1').value.trim(),$('dog2').value.trim()].filter(Boolean);if(!name)return alert('Name eingeben');db.people.push({id:uid(),name,place,dogs,judge:false,withDog:dogs.length>0});['personName','dog1','dog2'].forEach(x=>$(x).value='');db.plan=[];render()};
+$('addPerson').onclick=()=>{readPersonChanges();const name=$('personName').value.trim(),places=selectedPlaces($('personPlace')),place=places[0]||'',dogs=[$('dog1').value.trim(),$('dog2').value.trim()].filter(Boolean);if(!name)return alert('Name eingeben');db.people.push({id:uid(),name,place,places,dogs,judge:false,withDog:dogs.length>0});['personName','dog1','dog2'].forEach(x=>$(x).value='');db.plan=[];render()};
 function minutes(s){const [h,m]=s.split(':').map(Number);return h*60+m}function clock(n){return `${String(Math.floor(n/60)%24).padStart(2,'0')}:${String(n%60).padStart(2,'0')}`}
 function settings(){const start=$('noTime').checked?'':$('start').value,duration=Number($('duration').value),travel=Number($('travel').value);if(!Number.isInteger(duration)||duration<1||!Number.isInteger(travel)||travel<0)throw Error('Ungültige Zeitangabe');return {start,duration,travel,useBlocks:db.settings.useBlocks===true,blocks:db.settings.blocks||[]}}
 function overlaps(a,b,c,d){return a<d&&c<b}
@@ -230,11 +511,11 @@ function canJudge(person,handler){
  if(person.judge)return true;
  // Ersatzbegutachter dürfen bei Personalengpässen alle Hundeteams beurteilen.
  // Das höchste verfügbare Niveau wird bei der konkreten Besetzung bevorzugt.
- return (person.dogs||[]).some(dog=>!!dog);
+ return (person.dogs||[]).some((dog,i)=>!!dog&&levelOf(person,i)>=2);
 }
 function judgeMayVisit(person,placeId){
  // In getrennten Trainingsblöcken dürfen Begutachter ihren Stammplatz verlassen.
- return db.settings.useBlocks===true||!person.place||person.place===placeId;
+ return db.settings.useBlocks===true||!personPlaces(person).length||personAtPlace(person,placeId);
 }
 // Ausserhalb des eigenen Ausbildungsblocks darf eine Person bei Bedarf
 // auch länger als sechs Runden figurieren. Im normalen Modus gilt die Grenze.
@@ -250,7 +531,7 @@ function blockLevelSetForCurrentPlan(){
 }
 function judgeChoices(placeId,handler){
  return db.people.filter(p=>canJudge(p,handler)&&judgeMayVisit(p,placeId))
-  .sort((a,b)=>Number(b.judge)-Number(a.judge)||Number(!((a.dogs||[]).some((d,i)=>d&&dogEnabled(a,i))))-Number(!((b.dogs||[]).some((d,i)=>d&&dogEnabled(b,i))))||Math.max(...(b.dogs||[]).map((d,i)=>d?levelOf(b,i):-1),-1)-Math.max(...(a.dogs||[]).map((d,i)=>d?levelOf(a,i):-1),-1));
+  .sort((a,b)=>(juniorOnlyBlock()?Number(personAtPlace(b,placeId))-Number(personAtPlace(a,placeId)):0)||Number(b.judge)-Number(a.judge)||Number(!((a.dogs||[]).some((d,i)=>d&&dogEnabled(a,i))))-Number(!((b.dogs||[]).some((d,i)=>d&&dogEnabled(b,i))))||Math.max(...(b.dogs||[]).map((d,i)=>d?levelOf(b,i):-1),-1)-Math.max(...(a.dogs||[]).map((d,i)=>d?levelOf(a,i):-1),-1));
 }
 // Ein Begutachter, der selbst Hunde führt, darf während seiner begonnenen
 // Hundesuche-Serie NICHT begutachten, auch nicht in einer Pausenrunde.
@@ -259,7 +540,7 @@ function judgeHandlerConflict(plan){
  for(const p of db.people.filter(p=>!p.inactive)){
   const dogRuns=plan.filter(r=>r.person===p.id).sort((a,b)=>a.start-b.start);
   if(!dogRuns.length)continue;
-  const expected=(p.dogs||[]).filter((d,i)=>d&&dogEnabled(p,i)).length*db.places.length;
+  const expected=(p.dogs||[]).reduce((n,d,i)=>n+(d&&dogEnabled(p,i)?placesForDog(p.id,i).length:0),0);
   const first=dogRuns[0].start;
   // Bis alle Hunde ihre Rundgänge abgeschlossen haben, ist die Person
   // ausschliesslich Hundeführer (einschliesslich aller Pausen).
@@ -272,7 +553,7 @@ function judgeHandlerConflict(plan){
 // Hundeführer niemals als Figurant eingesetzt werden.
 function handlerFigurantConflict(plan){
  for(const p of db.people.filter(p=>!p.inactive)){
-  const expected=(p.dogs||[]).filter((d,i)=>d&&dogEnabled(p,i)).length*db.places.length;
+  const expected=(p.dogs||[]).reduce((n,d,i)=>n+(d&&dogEnabled(p,i)?placesForDog(p.id,i).length:0),0);
   if(!expected)continue;
   const own=plan.filter(r=>r.person===p.id).sort((a,b)=>a.start-b.start);
   if(!own.length)continue;
@@ -315,8 +596,8 @@ function generate(options={}){try{
   // Assign people without a fixed site (judges and figurants too) to one site
   // for this entire trial. Balance staffing needs and ensure each site has a judge.
   const staffSites=new Map();
-  const siteStaff=new Map(db.places.map(p=>[p.id,activePeople.filter(x=>x.place===p.id)]));
-  const freeStaff=activePeople.filter(p=>!p.place).map(p=>({p,sort:rng()})).sort((a,b)=>Number(b.p.judge)-Number(a.p.judge)||a.sort-b.sort).map(x=>x.p);
+  const siteStaff=new Map(db.places.map(p=>[p.id,activePeople.filter(x=>personAtPlace(x,p.id))]));
+  const freeStaff=activePeople.filter(p=>!personPlaces(p).length).map(p=>({p,sort:rng()})).sort((a,b)=>Number(b.p.judge)-Number(a.p.judge)||a.sort-b.sort).map(x=>x.p);
   for(const person of freeStaff){
    const options=db.places.map(place=>{const group=siteStaff.get(place.id),need=Number(place.figCount)||1;
     const hasJudge=group.some(x=>x.judge);
@@ -373,7 +654,7 @@ function generate(options={}){try{
       const pool=activePeople.filter(x=>figurantAllowedInCurrentBlock(x)&&x.id!==t.person&&x.id!==j.id&&((streak.get(x.id)||0)<6||outsideOwnTrainingBlock(x,currentBlockLevels))&&!states.some(y=>y.person===x.id&&y.done>0&&y.done<db.places.length));
       if(pool.length<figCount)continue;
       const prev=previous.get(place.id);
-      pool.sort((a,b)=>Number(a.place!==place.id)-Number(b.place!==place.id)||Number(a.judge)-Number(b.judge)||((prev?.fig.includes(b.id)?1:0)-(prev?.fig.includes(a.id)?1:0))*10+(streak.get(a.id)||0)-(streak.get(b.id)||0));
+      pool.sort((a,b)=>Number(!personAtPlace(a,place.id))-Number(!personAtPlace(b,place.id))||Number(a.judge)-Number(b.judge)||((prev?.fig.includes(b.id)?1:0)-(prev?.fig.includes(a.id)?1:0))*10+(streak.get(a.id)||0)-(streak.get(b.id)||0));
       const combos=[];
       function makeCombo(offset,chosen){if(chosen.length===figCount){combos.push(chosen.slice());return}for(let i=offset;i<pool.length;i++){chosen.push(pool[i]);makeCombo(i+1,chosen);chosen.pop();if(combos.length>=20)return}}
       makeCombo(0,[]);
@@ -392,8 +673,9 @@ function generate(options={}){try{
         return sum+(length<3?220:95);
        },0)+(prev?.judge===j.id?Math.min(6,judgeStreak.get(j.id)||0)*90+260:0);
        const judgeFigCount=figs.filter(f=>f.judge).length;
-       const awayFigCount=figs.filter(f=>f.place&&f.place!==place.id).length;
-       const score=priority+urgency+wait*110+scarcity+continuity-judgeFigCount*1100-awayFigCount*850+(j.judge?0:-450)+(t.done===0&&unfinished>db.places.length? -15:0)+rng()*22;
+       const awayFigCount=figs.filter(f=>personPlaces(f).length&&!personAtPlace(f,place.id)).length;
+       const juniorStaffPreference=juniorOnlyBlock()?(personAtPlace(j,place.id)?2200:0)+figs.filter(f=>personAtPlace(f,place.id)).length*2200:0;
+       const score=priority+urgency+wait*110+scarcity+continuity+juniorStaffPreference-judgeFigCount*1100-awayFigCount*850+(j.judge?0:-450)+(t.done===0&&unfinished>db.places.length? -15:0)+rng()*22;
        arr.push({t,place:place.id,judge:j.id,fig:figs.map(x=>x.id),ids,score});
       }
      }
@@ -493,12 +775,9 @@ function generate(options={}){try{
  db.plan=candidatePlan;save();renderPlan();
  const shortBlocks=countShortFigureBlocks(candidatePlan);
  const missing=[]; // Vollständigkeit ist unmittelbar zuvor verbindlich geprüft.
- $('status').textContent=missing.length?'Nicht vollständig planbar: '+best.plan.length+'/'+required+' Durchgänge. Offen: '+missing.join(', '):'Plan erstellt: '+teams.length+' Hundeteams, '+best.plan.length+' Durchgänge, '+best.rounds+' gemeinsame Zeitrunden, '+best.gaps+' Warte-Runden (maximal 1 pro Übergang), '+best.emptySlots+' freie Schadenplatz-Runden, '+best.lonely+' einzelne Runden.';
- $('status').textContent+=' Figuranten-Blöcke unter 3 Hunden: '+shortBlocks+'.';
- $('status').textContent+=' Alle Rollenverbote und Hundedurchgänge geprüft.';
- if(maxParallel<db.places.length)$('status').textContent+=' Personalgrenze: maximal '+maxParallel+' von '+db.places.length+' Schadenplätzen gleichzeitig besetzbar ('+activePeople.length+' aktive Personen).';
+ $('status').textContent=missing.length?'Plan nicht vollständig erstellt.':'Trainingsplan erfolgreich erstellt.';
  $('status').className=missing.length?'warning':'ok';
- }catch(e){db.plan=[];save();renderPlan();$('status').textContent='Kein gültiger Plan erstellt: '+e.message;$('status').className='warning';if(options.throwErrors)throw e;alert(e.message)}}
+ }catch(e){db.plan=[];save();renderPlan();$('status').textContent='Planung fehlgeschlagen. Bitte Eingaben prüfen.';$('status').className='warning';if(options.throwErrors)throw e;alert(e.message)}}
 // Five-team relay across three sites: all 15 runs in five fully occupied rounds.
 // Unlike the old four-team repair, this can move the final two full blocks together.
 function balanceTailFive(original){
@@ -554,7 +833,7 @@ function balanceTailFive(original){
        if(solution||++staffNodes>maxStaffNodes)return;
        if(picked.length===count){
         r.judge=j.id;r.fig=picked.map(p=>p.id);
-        const added=[];for(const p of picked)if(!p.place&&!figHome.has(p.id)){figHome.set(p.id,r.place);added.push(p.id)}
+        const added=[];for(const p of picked)if(!personPlaces(p).length&&!figHome.has(p.id)){figHome.set(p.id,r.place);added.push(p.id)}
         const next=new Set(busy);next.add(r.person);next.add(j.id);picked.forEach(p=>next.add(p.id));
         fill(k+1,next);
         for(const id of added)figHome.delete(id);
@@ -635,14 +914,14 @@ function balanceTailFour(original){
       const judges=judgeChoices(r.place,byId.get(r.person)).filter(p=>!busy.has(p.id));
       judges.sort((a,b)=>Number(b.judge)-Number(a.judge)||Number(a.id!==originalRun.judge)-Number(b.id!==originalRun.judge));
       for(const j of judges){
-       const pool=people.filter(p=>figurantAllowedInCurrentBlock(p)&&p.id!==r.person&&p.id!==j.id&&!busy.has(p.id)&&(!p.place||p.place===r.place)&&(!figHome.has(p.id)||figHome.get(p.id)===r.place));
+       const pool=people.filter(p=>figurantAllowedInCurrentBlock(p)&&p.id!==r.person&&p.id!==j.id&&!busy.has(p.id)&&(!personPlaces(p).length||personAtPlace(p,r.place))&&(!figHome.has(p.id)||figHome.get(p.id)===r.place));
        pool.sort((a,b)=>Number(originalRun.fig.includes(b.id))-Number(originalRun.fig.includes(a.id))||Number(a.judge)-Number(b.judge));
        const picked=[];
        function choose(offset){
         if(solution||++nodes>160000)return;
         if(picked.length===count){
          r.judge=j.id;r.fig=picked.map(p=>p.id);
-         const added=[];for(const p of picked)if(!p.place&&!figHome.has(p.id)){figHome.set(p.id,r.place);added.push(p.id)}
+         const added=[];for(const p of picked)if(!personPlaces(p).length&&!figHome.has(p.id)){figHome.set(p.id,r.place);added.push(p.id)}
          const next=new Set(busy);next.add(r.person);next.add(j.id);picked.forEach(p=>next.add(p.id));
          fill(k+1,next);
          for(const id of added)figHome.delete(id);
@@ -774,7 +1053,7 @@ function balanceSmallSchedule(original){
     const fig=[];
     function select(offset){
      if(fig.length===count){
-      const added=[];for(const p of fig){if(!p.place&&!floatingSite.has(p.id)){floatingSite.set(p.id,r.place);added.push(p.id)}}
+      const added=[];for(const p of fig){if(!personPlaces(p).length&&!floatingSite.has(p.id)){floatingSite.set(p.id,r.place);added.push(p.id)}}
       const nextBusy=new Set(busy);nextBusy.add(r.person);nextBusy.add(r.judge);fig.forEach(p=>nextBusy.add(p.id));
       const found=combine(site+1,nextBusy,[...chosen,[i,fig.map(p=>p.id)]]);
       if(found)return true;
@@ -860,7 +1139,7 @@ function optimizeFigures(plan){
      for(const id of proposed){
       if(id===r.fig[slot]||id===r.person||id===r.judge||r.fig.includes(id))continue;
       const person=db.people.find(x=>x.id===id);
-      if(!person||person.inactive===true||(!person.place&&!plan.some(x=>x.place===r.place&&(x.fig.includes(id)||x.judge===id))))continue;
+      if(!person||person.inactive===true||(!personPlaces(person).length&&!plan.some(x=>x.place===r.place&&(x.fig.includes(id)||x.judge===id))))continue;
       // Never replace a non-judge figurant with a qualified judge during local optimization.
       if(person.judge&&!db.people.find(x=>x.id===r.fig[slot])?.judge)continue;
       const old=r.fig[slot];r.fig[slot]=id;
@@ -876,6 +1155,114 @@ function optimizeFigures(plan){
   }
   if(!changed)break;
  }
+}
+
+function planScore(plan,segments){
+ const counts=new Map(db.people.filter(p=>!p.inactive).map(p=>[p.id,pastFigureCount(p.id)]));
+ let changes=0,offsite=0,unqualified=0;
+ for(const r of plan){
+  if(!segments.some(seg=>isPureJuniorSegment(seg)&&r.start>=seg.start&&r.start<=seg.last))
+   for(const id of r.fig)counts.set(id,(counts.get(id)||0)+1);
+  for(const id of r.fig)if(!personAtPlace(db.people.find(p=>p.id===id),r.place))offsite++;
+  if(!db.people.find(p=>p.id===r.judge)?.judge)unqualified++;
+ }
+ for(const seg of segments.length?segments:[{start:-Infinity,last:Infinity}]){
+  for(const place of db.places){
+   const rows=plan.filter(r=>r.place===place.id&&r.start>=seg.start&&r.start<=seg.last).sort((a,b)=>a.start-b.start);
+   for(let i=1;i<rows.length;i++)changes+=rows[i].fig.filter(id=>!rows[i-1].fig.includes(id)).length;
+  }
+ }
+ const values=[...counts.values()],fairness=values.reduce((sum,n)=>sum+n*n,0);
+ const rounds=new Set(plan.map(r=>r.start)).size;
+ return {rounds,changes,offsite,unqualified,fairness,score:rounds*1000000+changes*15000+unqualified*1000+offsite*100+fairness};
+}
+function currentPlanDiagnostics(plan=db.plan){
+ const issues=[],err=validate(plan);if(err)issues.push(err);
+ if(!plan.length)return ['Kein Trainingsplan vorhanden.'];
+ const seen=new Map();
+ for(const r of plan){
+  const key=r.person+'|'+r.dogIndex;
+  if(!seen.has(key))seen.set(key,[]);
+  seen.get(key).push(r);
+ }
+ for(const [key,rows] of seen){
+  const [id,idx]=key.split('|');
+  const expected=placesForDog(id,Number(idx)).length;
+  if(rows.length!==expected)issues.push(name(id)+': '+rows.length+' statt '+expected+' Schadenplätze');
+ }
+ const expectedTeams=db.people.flatMap(p=>p.inactive?[]:(p.dogs||[]).flatMap((d,i)=>d&&dogEnabled(p,i)&&placesForDog(p.id,i).length&&(!db.settings.useBlocks||configuredBlocks().some(b=>(b.levels||[]).includes(dogDetails(p,i).level)))?[{person:p.id,idx:i}]:[]));
+ const complete=validateCompletePlan(plan,expectedTeams);
+ if(complete)issues.push(complete);
+ return [...new Set(issues)];
+}
+function renderQuality(){
+ const quality=$('planQuality'),checks=$('planChecks'),manual=$('manualRoles');
+ if(!quality||!checks||!manual)return;
+ quality.replaceChildren();checks.replaceChildren();manual.replaceChildren();
+ if(!db.plan.length)return;
+ const q=planScore(db.plan,db.planBlocks||[]);
+ quality.append(el('h3','Planungsqualität'));
+ quality.append(el('p',q.rounds+' Suchrunden · '+q.changes+' Figurantenwechsel · '+q.unqualified+' Ersatzbegutachtungen · '+q.offsite+' Einsätze ausserhalb der Zuweisung'));
+ const issues=currentPlanDiagnostics();
+ checks.append(el('h3','Automatische Planprüfung'));
+ checks.append(el('p',issues.length?'Prüfung: '+issues.join(' | '):'Keine Regelverletzungen erkannt.'));
+ checks.className='quality-panel '+(issues.length?'warning':'ok');
+ manual.append(el('h3','Rollen manuell anpassen'));
+ manual.append(el('p','Änderungen werden nur übernommen, wenn die vollständige Regelprüfung erfolgreich ist.'));
+ const pick=el('select');pick.id='manualRun';
+ db.plan.forEach((r,i)=>{const o=el('option',(db.settings.start?clock(r.start):'Runde '+([...new Set(db.plan.map(x=>x.start))].indexOf(r.start)+1))+' · '+placeName(r.place)+' · '+name(r.person)+' / '+r.dog);o.value=i;pick.append(o)});
+ const role=el('select');for(const v of ['judge','fig0','fig1','fig2','fig3','fig4']){const o=el('option',v==='judge'?'Begutachter':('Figurant '+(Number(v.slice(3))+1)));o.value=v;role.append(o)}
+ const person=el('select');for(const p of db.people.filter(p=>!p.inactive)){const o=el('option',p.name);o.value=p.id;person.append(o)}
+ const apply=button('Rolle ändern',()=>{
+  const idx=Number(pick.value),r=db.plan[idx],v=role.value,id=person.value;
+  if(!r)return;
+  if(v==='judge'){const old=r.judge;if(old===id)return;const candidate=db.plan.map(x=>({...x,fig:[...x.fig]}));candidate[idx].judge=id;const err=validate(candidate)||currentPlanDiagnostics(candidate).join('; ');if(err)return alert('Nicht zulässig: '+err);db.plan=candidate}
+  else {const pos=Number(v.slice(3));if(pos>=r.fig.length)return alert('Dieser Schadenplatz hat keinen Figuranten '+(pos+1));const candidate=db.plan.map(x=>({...x,fig:[...x.fig]}));candidate[idx].fig[pos]=id;const err=validate(candidate)||currentPlanDiagnostics(candidate).join('; ');if(err)return alert('Nicht zulässig: '+err);db.plan=candidate}
+  save();renderPlan();
+ });
+ manual.append(pick,role,person,apply);
+}
+
+function runRegressionTests(){
+ const results=[];
+ const check=(title,fn)=>{try{if(!fn())throw Error('Prüfung fehlgeschlagen');results.push('✓ '+title)}catch(e){results.push('✗ '+title+': '+e.message)}};
+ const copy=()=>db.plan.map(r=>({...r,fig:[...r.fig]}));
+ check('Bestehender Plan ist gültig',()=>db.plan.length&&!currentPlanDiagnostics().length);
+ if(db.plan.length){
+  check('Doppelrolle wird erkannt',()=>{const p=copy();p[0].judge=p[0].person;return !!validate(p)});
+  check('Doppelte Figuranten werden erkannt',()=>{const p=copy();if(p[0].fig.length<2)return true;p[0].fig[1]=p[0].fig[0];return !!validate(p)});
+  check('Fehlender Hundedurchgang wird erkannt',()=>{const p=copy();p.pop();return currentPlanDiagnostics(p).length>0});
+  check('Belastungsbewertung ist stabil',()=>planScore(copy(),db.planBlocks||[]).score===planScore(copy(),db.planBlocks||[]).score);
+  check('Junioren-Einsätze werden nicht in der Historie gezählt',()=>{
+   const all=countedFigurantRuns();
+   return all.every(r=>!isPureJuniorRun(r));
+  });
+  check('Manuelle Änderungen verändern das Original nicht',()=>{const p=copy();const old=db.plan[0].judge;p[0].judge='test';return db.plan[0].judge===old});
+ }
+ $('testResults').textContent=results.join(' | ');
+ $('testResults').className=results.some(x=>x.startsWith('✗'))?'warning':'ok';
+ return results;
+}
+$('runTests').onclick=runRegressionTests;
+function generateBestPlan(){
+ const count=Number($('variantCount')?.value||1);
+ if(count===1){if($('useBlocks').checked)generateBlocks();else{db.planBlocks=[];generate()}return}
+ const originalPeople=[...db.people],originalPlan=db.plan.map(r=>({...r,fig:[...r.fig]})),originalSegments=[...(db.planBlocks||[])],candidates=[];
+ // Different stable starting orders allow the existing greedy search to explore
+ // alternatives. Each candidate is validated before being considered.
+ for(let i=0;i<count;i++){
+  db.people=originalPeople.slice(i).concat(originalPeople.slice(0,i));
+  if($('useBlocks').checked)generateBlocks();else{db.planBlocks=[];generate()}
+  if(db.plan.length&&!currentPlanDiagnostics().length){
+   const plan=db.plan.map(r=>({...r,fig:[...r.fig]})),segments=(db.planBlocks||[]).map(x=>({...x}));
+   candidates.push({plan,segments,q:planScore(plan,segments)});
+  }
+ }
+ db.people=originalPeople;
+ if(!candidates.length){db.plan=originalPlan;db.planBlocks=originalSegments;save();renderPlan();$('status').textContent='Keine gültige Variante gefunden.';return}
+ candidates.sort((a,b)=>a.q.score-b.q.score);
+ db.plan=candidates[0].plan;db.planBlocks=candidates[0].segments;
+ save();renderPlan();$('status').textContent='Beste von '+candidates.length+' gültigen Varianten gewählt. '+candidates[0].q.rounds+' Runden, '+candidates[0].q.changes+' Figurantenwechsel.';$('status').className='ok';
 }
 $('generate').onclick=()=>{if($('useBlocks').checked)generateBlocks();else{db.planBlocks=[];generate()}};
 function name(id){return db.people.find(p=>p.id===id)?.name||'?'}function placeName(id){return db.places.find(p=>p.id===id)?.name||'?'}
@@ -914,13 +1301,13 @@ function validate(plan){if(judgeHandlerConflict(plan))return 'Begutachter währe
  }
  for(const r of plan){if([r.person,r.judge,...r.fig].some(id=>db.people.find(p=>p.id===id)?.inactive===true))return 'Nicht eingesetzte Person im Trainingsplan';if(r.end<=r.start)return 'Ungültige Dauer';if(r.fig.length!==(Number(db.places.find(p=>p.id===r.place)?.figCount)||1))return 'Falsche Figurantenanzahl';if(r.judge===r.person||r.fig.includes(r.person)||r.fig.includes(r.judge)||new Set(r.fig).size!==r.fig.length)return 'Doppelrolle in einem Durchgang';if(!judgeMayVisit(db.people.find(p=>p.id===r.judge)||{},r.place)||!canJudge(db.people.find(p=>p.id===r.judge),db.people.find(p=>p.id===r.person)))return 'Begutachter nicht berechtigt';if(r.fig.some(id=>!db.people.some(x=>x.id===id)))return 'Unbekannter Figurant';for(const other of plan){if(other===r||!overlaps(r.start,r.end,other.start,other.end))continue;if(other.place===r.place)return 'Schadenplatz doppelt belegt';const a=[r.person,r.judge,...r.fig],b=[other.person,other.judge,...other.fig];if(a.some(id=>b.includes(id)))return 'Person doppelt belegt'}}
  // Every dog must start at its own place and never repeat a place.
- const floatingSites=new Map();for(const r of plan){for(const id of r.fig){const person=db.people.find(p=>p.id===id);if(person&&!person.place){if(floatingSites.has(id)&&floatingSites.get(id)!==r.place)return 'Person ohne festen Schadenplatz an mehreren Plätzen eingesetzt';floatingSites.set(id,r.place)}}}
- const byDog=new Map();for(const r of plan){const key=r.person+'|'+r.dogIndex;if(!byDog.has(key))byDog.set(key,[]);byDog.get(key).push(r)}const freeHomes=new Map();for(const entries of byDog.values()){entries.sort((a,b)=>a.start-b.start);const owner=db.people.find(p=>p.id===entries[0].person);if(owner?.place&&entries[0].place!==owner.place&&db.settings.useBlocks!==true)return 'Hund startet nicht am eigenen Schadenplatz';if(!owner?.place){const old=freeHomes.get(owner?.id);if(old&&old!==entries[0].place)return 'Hunde desselben Hundeführers haben unterschiedliche Startplätze';freeHomes.set(owner?.id,entries[0].place)}if(new Set(entries.map(r=>r.place)).size!==entries.length)return 'Hund besucht Schadenplatz doppelt';const homeIndex=db.places.findIndex(p=>p.id===entries[0].place);for(let i=0;i<entries.length;i++){if(entries[i].place!==db.places[(homeIndex+i)%db.places.length].id)return 'Falsche Rotationsreihenfolge';if(i>0&&entries[i].start-entries[i-1].start>2*step)return 'Mehr als eine Pausenrunde zwischen Hundesuchen'}}return ''}
+ const floatingSites=new Map();for(const r of plan){for(const id of r.fig){const person=db.people.find(p=>p.id===id);if(person&&!personPlaces(person).length){if(floatingSites.has(id)&&floatingSites.get(id)!==r.place)return 'Person ohne festen Schadenplatz an mehreren Plätzen eingesetzt';floatingSites.set(id,r.place)}}}
+ const byDog=new Map();for(const r of plan){const key=r.person+'|'+r.dogIndex;if(!byDog.has(key))byDog.set(key,[]);byDog.get(key).push(r)}const freeHomes=new Map();for(const entries of byDog.values()){entries.sort((a,b)=>a.start-b.start);const owner=db.people.find(p=>p.id===entries[0].person);if(owner&&personPlaces(owner).length&&!personAtPlace(owner,entries[0].place)&&db.settings.useBlocks!==true)return 'Hund startet nicht am eigenen Schadenplatz';if(!owner?.place){const old=freeHomes.get(owner?.id);if(old&&old!==entries[0].place)return 'Hunde desselben Hundeführers haben unterschiedliche Startplätze';freeHomes.set(owner?.id,entries[0].place)}if(new Set(entries.map(r=>r.place)).size!==entries.length)return 'Hund besucht Schadenplatz doppelt';const allowedPlaces=placesForDog(entries[0].person,entries[0].dogIndex);const homeIndex=allowedPlaces.findIndex(p=>p.id===entries[0].place);if(homeIndex<0)return 'Hund sucht auf nicht zugewiesenem Schadenplatz';for(let i=0;i<entries.length;i++){if(entries[i].place!==allowedPlaces[(homeIndex+i)%allowedPlaces.length].id)return 'Falsche Rotationsreihenfolge';if(i>0&&entries[i].start-entries[i-1].start>2*step)return 'Mehr als eine Pausenrunde zwischen Hundesuchen'}}return ''}
 // Unabhängige Endprüfung: keine fehlenden oder mehrfachen Hundedurchgänge,
 // keine Rollen während der eigenen Suchserie und keine verdeckten Doppelrollen.
 function validateCompletePlan(plan,teams){
- const n=db.places.length,expected=new Map();
- for(const t of teams)expected.set(t.person+'|'+t.idx,n);
+ const expected=new Map();
+ for(const t of teams)expected.set(t.person+'|'+t.idx,placesForDog(t.person,t.idx).length);
  const actual=new Map();
  for(const r of plan){
   const key=r.person+'|'+r.dogIndex;
@@ -934,20 +1321,29 @@ function validateCompletePlan(plan,teams){
 }
 function observationKey(r){return [r.person,r.dogIndex,r.place].join('|')}
 function renderPlan(){
- const head=$('scheduleHead'),body=$('schedule'),summary=$('figurantSummary');head.replaceChildren();body.replaceChildren();summary.replaceChildren();
+ const head=$('scheduleHead'),body=$('schedule'),summary=$('figurantSummary');head.replaceChildren();body.replaceChildren();summary.replaceChildren();renderFigureHistory();
  const hr=el('tr');hr.append(el('th',db.settings.start?'Startzeit':'Runde'));
  db.places.forEach(p=>hr.append(el('th',p.name)));head.append(hr);
  const times=[...new Set(db.plan.map(r=>r.start))].sort((a,b)=>a-b);
  const segments=db.settings.useBlocks===true&&Array.isArray(db.planBlocks)?db.planBlocks:[];
  const step=db.settings.duration+db.settings.travel;
+ const roundNumbers=new Map(times.map((time,i)=>[time,i+1]));
+ // Nur Schadenplätze anzeigen, auf denen in diesem Block tatsächlich Hunde suchen.
+ const visiblePlaces=segment=>segment?db.places.filter(p=>db.plan.some(r=>r.place===p.id&&r.start>=segment.start&&r.start<=segment.last)):db.places;
+ if(segments.length)head.replaceChildren(); // Blocküberschriften ersetzen die globale Spaltenüberschrift.
  function addBlockHeading(segment){
   const tr=el('tr');tr.className='block-heading';const th=el('th');th.colSpan=db.places.length+1;
   th.textContent='TRAININGSBLOCK '+segment.number+' · '+segment.name+' — '+segment.rounds+' Runden';tr.append(th);body.append(tr);
+  // Schadenplatz-Spalten bei jedem Trainingsblock erneut beschriften.
+  const placesRow=el('tr');placesRow.className='block-place-heading';
+  placesRow.append(el('th',db.settings.start?'Startzeit':'Runde'));
+  visiblePlaces(segment).forEach(p=>placesRow.append(el('th',p.name)));
+  body.append(placesRow);
  }
  function addBlockPause(segment){
   const tr=el('tr');tr.className='block-break';
   const th=el('th',db.settings.start?clock(segment.pauseStart):'Pause');tr.append(th);
-  const td=el('td','PAUSE ZWISCHEN DEN TRAININGSBLÖCKEN'+(db.settings.start?' · '+clock(segment.pauseStart)+'–'+clock(segment.pauseEnd):' · 1 Runde'));
+  const td=el('td','PAUSE ZWISCHEN DEN TRAININGSBLÖCKEN'+(db.settings.start?' · '+clock(segment.pauseStart)+'–'+clock(segment.pauseEnd):''));
   td.colSpan=db.places.length;tr.append(td);body.append(tr);
  }
  let lastSegment=null;
@@ -964,8 +1360,8 @@ function renderPlan(){
    if(lastSegment)addBlockPause(lastSegment);
    addBlockHeading(segment);lastSegment=segment;
   }
-  const tr=el('tr');tr.append(el('th',db.settings.start?clock(time):'Runde '+(Math.round(time/(db.settings.duration+db.settings.travel))+1)));
-  db.places.forEach(p=>{
+  const tr=el('tr');tr.append(el('th',db.settings.start?clock(time):'Runde '+roundNumbers.get(time)));
+  visiblePlaces(segment).forEach(p=>{
    const td=el('td'),index=db.plan.findIndex(r=>r.start===time&&r.place===p.id);
    if(index>=0){
     const r=db.plan[index];td.append(el('strong',name(r.person)+' / '+r.dog));
@@ -1086,12 +1482,17 @@ function renderBlocks(){
  $('useBlocks').checked=db.settings.useBlocks===true;$('blockSettings').hidden=!$('useBlocks').checked;
  const list=$('blockList');list.replaceChildren();
  configuredBlocks().forEach((block,index)=>{
-  const row=el('div');row.className='place-card';row.style.margin='8px 0';
+  const row=el('div');row.className='place-card block-card';row.style.margin='8px 0';
   const nameLabel=el('label','Block '+(index+1)+' – Bezeichnung');const input=el('input');input.value=block.name||'Block '+(index+1);
   input.onchange=()=>{block.name=input.value.trim()||'Block '+(index+1);save()};nameLabel.append(input);row.append(nameLabel);
-  const levels=el('div');levels.style.cssText='display:flex;gap:12px;flex-wrap:wrap;margin:10px 0';
+  const levels=el('div');levels.className='block-options block-levels';levels.append(el('strong','Ausbildungsstände'));
   LEVELS.forEach(level=>{const label=el('label');label.className='role-option';const cb=el('input');cb.type='checkbox';cb.checked=(block.levels||[]).includes(level);cb.onchange=()=>{block.levels=LEVELS.filter(x=>x===level?cb.checked:(block.levels||[]).includes(x));save()};label.append(cb,el('span',level));levels.append(label)});
-  row.append(levels,button('Nach oben',()=>{if(index){[db.settings.blocks[index-1],db.settings.blocks[index]]=[db.settings.blocks[index],db.settings.blocks[index-1]];save();renderBlocks()}}),button('Entfernen',()=>{db.settings.blocks.splice(index,1);save();renderBlocks()}));list.append(row);
+  const sites=el('div');sites.className='block-options block-sites';
+  sites.append(el('strong','Schadenplätze in diesem Block:'));
+  db.places.forEach(place=>{const label=el('label');label.className='role-option';const cb=el('input');cb.type='checkbox';cb.checked=!Array.isArray(block.places)||block.places.includes(place.id);cb.onchange=()=>{if(!Array.isArray(block.places))block.places=db.places.map(p=>p.id);block.places=cb.checked?[...new Set([...block.places,place.id])]:block.places.filter(id=>id!==place.id);save()};label.append(cb,el('span',place.name));sites.append(label)});
+  row.append(sites);
+  const actions=el('div');actions.className='block-actions';
+  row.append(levels);actions.append(button('Nach oben',()=>{if(index){[db.settings.blocks[index-1],db.settings.blocks[index]]=[db.settings.blocks[index],db.settings.blocks[index-1]];save();renderBlocks()}}),button('Entfernen',()=>{db.settings.blocks.splice(index,1);save();renderBlocks()}));list.append(row);
  });
 }
 $('useBlocks').onchange=()=>{db.settings.useBlocks=$('useBlocks').checked;if(db.settings.useBlocks&&!configuredBlocks().length)db.settings.blocks=[{name:'Block 1',levels:[...LEVELS]}];save();renderBlocks()};
@@ -1134,11 +1535,12 @@ function balanceFiguresAcrossBlocks(plan,segments){
  const persons=db.people.filter(p=>p.inactive!==true);
  const personById=new Map(persons.map(p=>[p.id,p]));
  const totals=()=>{const m=new Map(persons.map(p=>[p.id,0]));for(const r of plan)for(const id of r.fig)m.set(id,(m.get(id)||0)+1);return m};
- const score=m=>{const loads=[...m.values()];return Math.max(...loads)*10000+loads.reduce((sum,n)=>sum+n*n,0)*10};
+ const score=figureLoadScore;
  let changes=0;
  for(let pass=0;pass<12;pass++){
   const counts=totals();let baseline=score(counts),best=null;
   for(const seg of segments){
+   if(isPureJuniorSegment(seg))continue; // Junioren-Personalpriorität nicht durch Belastungsausgleich aufheben.
    const blockRuns=plan.filter(r=>r.start>=seg.start&&r.start<=seg.last);
    const occupiedElsewhere=new Set(blockRuns.flatMap(r=>[r.person,r.judge]));
    for(const place of db.places){
@@ -1175,17 +1577,73 @@ function balanceFiguresAcrossBlocks(plan,segments){
  }
  return changes;
 }
+// Ausgleich durch Rollentausch: Ein stärker belasteter Figurant kann
+// Ersatzbegutachter werden, während der bisherige Ersatzbegutachter figuriert.
+// Nur zulässige Tausche, keine zusätzlichen Runden und keine neuen Liegewechsel.
+// Nur komplette Rollen-Serien tauschen: keine Wechsel innerhalb eines Blocks.
+// Ein Ersatzbegutachter kann mit einem Figurant am selben Schadenplatz tauschen,
+// sofern beide während ALLER betreffenden Runden verfügbar und berechtigt sind.
+function balanceSubstituteJudgeFigures(plan,segments){
+ const people=new Map(db.people.map(p=>[p.id,p]));
+ const totals=()=>{const m=new Map(db.people.filter(p=>!p.inactive).map(p=>[p.id,0]));for(const r of plan)for(const id of r.fig)m.set(id,(m.get(id)||0)+1);return m};
+ const score=figureLoadScore;
+ let changes=0;
+ for(let pass=0;pass<15;pass++){
+  const counts=totals(),baseline=score(counts);let best=null;
+  for(const seg of segments){
+   if(isPureJuniorSegment(seg))continue; // Junioren-Personalpriorität nicht durch Belastungsausgleich aufheben.
+   const blockRuns=plan.filter(r=>r.start>=seg.start&&r.start<=seg.last);
+   for(const place of db.places){
+    const site=blockRuns.filter(r=>r.place===place.id).sort((a,b)=>a.start-b.start);
+    if(!site.length)continue;
+    const judgeId=site[0].judge;
+    if(!site.every(r=>r.judge===judgeId)||people.get(judgeId)?.judge)continue;
+    // Kein einzelner Rundentausch: nur Figuren, die alle Runden am Platz liegen.
+    const figIds=site[0].fig.filter(id=>site.every(r=>r.fig.includes(id)));
+    for(const figId of figIds){
+     if(!people.has(figId)||!site.every(r=>canJudge(people.get(figId),people.get(r.person))))continue;
+     if((counts.get(figId)||0)<=(counts.get(judgeId)||0)+site.length)continue;
+     const updated=new Map(counts);
+     updated.set(figId,(updated.get(figId)||0)-site.length);
+     updated.set(judgeId,(updated.get(judgeId)||0)+site.length);
+     const value=score(updated);
+     if(value>=baseline||(best&&value>=best.value))continue;
+     for(const r of site){r.judge=figId;r.fig=r.fig.map(id=>id===figId?judgeId:id)}
+     const valid=!validate(plan);
+     for(const r of site){r.judge=judgeId;r.fig=r.fig.map(id=>id===judgeId?figId:id)}
+     if(valid)best={site,judgeId,figId,value};
+    }
+   }
+  }
+  if(!best)break;
+  for(const r of best.site){r.judge=best.figId;r.fig=r.fig.map(id=>id===best.figId?best.judgeId:id)}
+  changes++;
+ }
+ return changes;
+}
+
+function blockPlaces(block){return Array.isArray(block?.places)?db.places.filter(p=>block.places.includes(p.id)):db.places}
+function placesForDog(person,idx){
+ if(db.settings.useBlocks!==true)return db.places;
+ const p=db.people.find(x=>x.id===person);const level=p?dogDetails(p,idx).level:null;
+ return blockPlaces(configuredBlocks().find(b=>(b.levels||[]).includes(level)));
+}
 function generateBlocks(){
  const blocks=configuredBlocks().filter(b=>(b.levels||[]).length);
  if(!blocks.length)return alert('Bitte mindestens einen Trainingsblock mit Ausbildungsständen definieren.');
  const used=new Set();for(const b of blocks)for(const l of b.levels){if(used.has(l))return alert('Ausbildungsstand '+l+' ist mehreren Blöcken zugeordnet.');used.add(l)}
  const active=db.people.flatMap(p=>p.inactive?[]:(p.dogs||[]).flatMap((dog,i)=>dog&&dogEnabled(p,i)?[{p,i,level:dogDetails(p,i).level||'Anfänger'}]:[]));
- if(active.some(t=>!used.has(t.level)))return alert('Nicht alle aktiven Hundeteams sind einem Trainingsblock zugeordnet.');
+ // Aktive Hunde ohne passenden Block nehmen nicht am Training teil.
+ const assigned=active.filter(t=>used.has(t.level));
+ if(!assigned.length)return alert('Kein aktives Hundeteam in den ausgewählten Trainingsblöcken.');
+ if(blocks.some(b=>!blockPlaces(b).length))return alert('Jeder Trainingsblock benötigt mindestens einen Schadenplatz.');
+ const allPlaces=db.places;
  const original=db.people.map(p=>({p,dogRun:Array.isArray(p.dogRun)?[...p.dogRun]:null}));
  const previous=db.plan,previousSegments=db.planBlocks;const combined=[];const segments=[];const blockNotes=[];const step=Number($('duration').value)+Number($('travel').value);const start=$('noTime').checked?0:minutes($('start').value||'00:00');let offset=0;
  try{
   for(const b of blocks){
-   const group=active.filter(t=>b.levels.includes(t.level));if(!group.length)continue;
+   const group=assigned.filter(t=>b.levels.includes(t.level));if(!group.length)continue;
+   db.places=blockPlaces(b).slice();
    currentJudgeExcluded=new Set(b.levels);
    for(const {p} of original){p.dogRun=(p.dogs||[]).map((dog,i)=>!!dog&&group.some(t=>t.p===p&&t.i===i))}
    generate({throwErrors:true});
@@ -1203,14 +1661,19 @@ function generateBlocks(){
    // Eine vollständige zusätzliche Zeitrunde bleibt zwischen zwei Blöcken frei.
    offset+=(max-min)+2*step;
    currentJudgeExcluded=null;
+   db.places=allPlaces;
   }
   for(const {p,dogRun} of original){if(dogRun===null)delete p.dogRun;else p.dogRun=dogRun}
+  db.places=allPlaces;
   const balanceChanges=balanceFiguresAcrossBlocks(combined,segments);
+  // Nur ganze Einsatzserien tauschen; keine zusätzlichen Wechsel innerhalb eines Blocks.
+  const substituteChanges=balanceSubstituteJudgeFigures(combined,segments);
+  const juniorChanges=preferJuniorSiteStaff(combined,segments);
   db.settings=settings();db.plan=combined;db.planBlocks=segments;
-  const err=validate(combined)||validateCompletePlan(combined,active.map(t=>({person:t.p.id,idx:t.i})));
+  const err=validate(combined)||validateCompletePlan(combined,assigned.map(t=>({person:t.p.id,idx:t.i})));
   if(err)throw Error('Blockübergreifende Prüfung: '+err);
-  save();renderPlan();$('status').textContent='Plan erstellt: '+blocks.length+' getrennte Trainingsblöcke, '+combined.length+' Suchdurchgänge, '+new Set(combined.map(r=>r.start)).size+' Runden, '+Math.max(0,segments.length-1)+' Blockpausen. '+blockNotes.join(' | ')+'. Figuranten-Ausgleich: '+balanceChanges+' ganze Einsatzserien angepasst. Alle Rollenregeln geprüft.';$('status').className='ok';
- }catch(e){currentJudgeExcluded=null;for(const {p,dogRun} of original){if(dogRun===null)delete p.dogRun;else p.dogRun=dogRun}db.plan=previous;db.planBlocks=previousSegments;save();renderPlan();$('status').textContent='Blockplanung fehlgeschlagen: '+e.message;$('status').className='warning';alert(e.message)}
+  save();renderPlan();$('status').textContent='Trainingsplan erfolgreich erstellt.';$('status').className='ok';
+ }catch(e){db.places=allPlaces;currentJudgeExcluded=null;for(const {p,dogRun} of original){if(dogRun===null)delete p.dogRun;else p.dogRun=dogRun}db.plan=previous;db.planBlocks=previousSegments;save();renderPlan();$('status').textContent='Planung fehlgeschlagen. Bitte Eingaben prüfen.';$('status').className='warning';alert(e.message)}
 }
 // Offline PDF export: create a real PDF file and ask the browser to download it.
 // The browser/OS decides the final download folder (especially on iOS).
@@ -1227,14 +1690,15 @@ function downloadPlanPdf(){
  add('TRAININGSPLAN', 'title');add('');
  const times=[...new Set(db.plan.map(r=>r.start))].sort((a,b)=>a-b);
  const blocks=db.settings.useBlocks&&Array.isArray(db.planBlocks)?db.planBlocks:[];
+ const roundNumbers=new Map(times.map((time,i)=>[time,i+1]));
  let lastBlock=null;
  for(const time of times){
   const block=blocks.find(b=>time>=b.start&&time<=b.last);
-  if(block!==lastBlock){if(lastBlock){add('');add('PAUSE ZWISCHEN DEN TRAININGSBLOECKEN (1 Runde)','heading');add('')}
+  if(block!==lastBlock){if(lastBlock){add('');add('PAUSE ZWISCHEN DEN TRAININGSBLOECKEN','heading');add('')}
    if(block){add('');add('TRAININGSBLOCK '+block.number+' - '+block.name+' ('+block.rounds+' Runden)','heading');add('')}
    lastBlock=block;
   }
-  add((db.settings.start?clock(time):'Runde '+(Math.round(time/(db.settings.duration+db.settings.travel))+1)),'heading');
+  add((db.settings.start?clock(time):'Runde '+roundNumbers.get(time)),'heading');
   for(const place of db.places){
    const r=db.plan.find(r=>r.start===time&&r.place===place.id);
    if(!r){add('  '+place.name+': -');continue}
@@ -1284,13 +1748,14 @@ function downloadFillablePdf(){
  const pageIds=[],fieldIds=[];
  const times=[...new Set(db.plan.map(r=>r.start))].sort((a,b)=>a-b);
  const segments=db.settings.useBlocks&&Array.isArray(db.planBlocks)?db.planBlocks:[];
+ const roundNumbers=new Map(times.map((time,i)=>[time,i+1]));
  const line=(x,y,t,size=11,color='0.12 0.15 0.2')=>'BT /F1 '+size+' Tf '+color+' rg '+x+' '+y+' Td ('+esc(ascii(t))+') Tj ET\n';
  const clip=(s,n=43)=>String(s).length>n?String(s).slice(0,n-3)+'...':String(s);
  for(let k=0;k<times.length;k++){
   const time=times[k],segment=segments.find(b=>time>=b.start&&time<=b.last);
   let stream='0.98 0.98 0.99 rg 0 0 842 595 re f\n';
   stream+=line(30,558,'TRAININGSPLAN - BETA / AUSFUELLBARE BEOBACHTUNGEN',17,'0.5 0.08 0.13');
-  stream+=line(30,531,(segment?'Trainingsblock '+segment.number+' - '+segment.name+' | ':'')+(db.settings.start?clock(time):'Runde '+(Math.round(time/(db.settings.duration+db.settings.travel))+1)),12);
+  stream+=line(30,531,(segment?'Trainingsblock '+segment.number+' - '+segment.name+' | ':'')+(db.settings.start?clock(time):'Runde '+roundNumbers.get(time)),12);
   const widgets=[];
   for(let j=0;j<db.places.length;j++){
    const place=db.places[j],r=db.plan.find(a=>a.start===time&&a.place===place.id);
